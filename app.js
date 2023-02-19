@@ -29,6 +29,7 @@ app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
+// Global Error Middleware
 app.use(globalErrorController);
 
 module.exports = app;
