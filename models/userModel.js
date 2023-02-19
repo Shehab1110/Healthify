@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     enum: ['patient', 'doctor', 'admin'],
-    default: 'patient',
+    default: 'user',
   },
   email: {
     type: String,
@@ -24,12 +24,6 @@ const userSchema = new mongoose.Schema({
     trim: true,
     lowercase: true,
     validate: [validator.isEmail, 'Please provide a valid email!'],
-  },
-  mobileNum: {
-    type: String,
-    unique: true,
-    trim: true,
-    validate: [validator.isMobilePhone, 'Please provide a valid phone number!'],
   },
   password: {
     type: String,
