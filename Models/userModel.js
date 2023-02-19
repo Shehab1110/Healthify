@@ -58,8 +58,14 @@ const userSchema = new mongoose.Schema({
   },
   photo: String,
   passwordChangeAt: Date,
-  passwordResetToken: String,
-  passwordResetTokenExpiry: Date,
+  passwordResetToken: {
+    type: String,
+    select: false,
+  },
+  passwordResetTokenExpiry: {
+    Date,
+    select: false,
+  },
 });
 
 userSchema.pre('save', async function (next) {

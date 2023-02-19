@@ -30,7 +30,7 @@ const handleCastErrorDB = (err) =>
   new AppError(`Invalid ${err.path}: ${err.value}`, 400);
 
 const handleDuplicateErrorDB = (err) =>
-  new AppError(`There is an existing tour: ${err.keyValue.name}`, 400);
+  new AppError(`There is an existing email addres: ${err.keyValue.name}`, 400);
 
 const handleValidatorErrorDB = (err) => {
   const errors = Object.values(err.errors).map((el) => el.message);
