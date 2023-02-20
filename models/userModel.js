@@ -3,6 +3,8 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
+const Patient = require('./patientModel');
+const Doctor = require('./doctorModel');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -15,7 +17,7 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     enum: ['patient', 'doctor', 'admin'],
-    default: 'user',
+    default: 'patient',
   },
   email: {
     type: String,
@@ -62,6 +64,7 @@ const userSchema = new mongoose.Schema({
   },
 });
 
+// Encrypting User password before saving to DB
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);
@@ -69,6 +72,7 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+// Adding the passwordChangedAt property before saving th DB
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password' || this.isNew)) return next();
   this.passwordChangeAt = Date.now() - 1000;

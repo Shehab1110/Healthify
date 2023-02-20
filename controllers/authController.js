@@ -6,6 +6,8 @@ const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 const sendEmail = require('../utils/email');
+const Patient = require('../models/patientModel');
+const Doctor = require('../models/doctorModel');
 
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -14,6 +16,9 @@ const signToken = (id) =>
 
 const createSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
+  user.password = undefined;
+  user.active = undefined;
+  user.passwordChangeAt = undefined;
 
   res.status(statusCode).json({
     status: 'success',
@@ -31,6 +36,21 @@ exports.signUp = catchAsync(async (req, res, next) => {
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
   });
+  await Patient.create({ user_id: newUser.id });
+  createSendToken(newUser, 201, res);
+});
+
+exports.doctorSignUp = catchAsync(async (req, res, next) => {
+  if (!(req.user.role === 'admin'))
+    return next(new AppError('You do not have permisson to signup a doctor!'));
+  const newUser = await User.create({
+    name: req.body.name,
+    role: 'doctor',
+    email: req.body.email,
+    password: req.body.password,
+    passwordConfirm: req.body.passwordConfirm,
+  });
+  await Doctor.create({ user_id: newUser.id });
   createSendToken(newUser, 201, res);
 });
 
