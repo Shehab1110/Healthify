@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 /* eslint-disable import/no-extraneous-dependencies */
 const crypto = require('crypto');
 const { promisify } = require('util');
@@ -36,7 +37,7 @@ exports.signUp = catchAsync(async (req, res, next) => {
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
   });
-  await Patient.create({ user_id: newUser.id });
+  await Patient.create({ user_id: newUser.id, name: req.body.name });
   createSendToken(newUser, 201, res);
 });
 
@@ -50,7 +51,11 @@ exports.doctorSignUp = catchAsync(async (req, res, next) => {
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
   });
-  await Doctor.create({ user_id: newUser.id });
+  await Doctor.create({
+    user_id: newUser.id,
+    name: req.body.name,
+    speciality: req.body.speciality,
+  });
   createSendToken(newUser, 201, res);
 });
 

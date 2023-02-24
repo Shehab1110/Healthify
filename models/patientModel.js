@@ -1,7 +1,13 @@
 const mongoose = require('mongoose');
-const validator = require('validator');
 
 const patientSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'Please tell your name!'],
+    trim: true,
+    minlength: 3,
+    maxlength: 20,
+  },
   user_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -27,6 +33,19 @@ const patientSchema = new mongoose.Schema({
     type: Number,
     select: false,
   },
+  appointments: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Appointment',
+    },
+  ],
+  emrs: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'EMR',
+    },
+  ],
+  select: false,
 });
 
 const Patient = mongoose.model('Patient', patientSchema);

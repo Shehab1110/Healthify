@@ -22,7 +22,15 @@ const appointmentSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['scheduled', 'cancelled', 'completed'],
-    required: true,
+    default: 'scheduled',
+  },
+  emr: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'EMR',
+  },
+  payment: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Payment',
   },
 });
 

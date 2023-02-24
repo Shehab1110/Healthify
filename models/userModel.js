@@ -3,8 +3,6 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
-const Patient = require('./patientModel');
-const Doctor = require('./doctorModel');
 
 const userSchema = new mongoose.Schema({
   name: {
