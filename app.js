@@ -8,6 +8,8 @@ const globalErrorController = require('./controllers/errorController');
 
 const app = express();
 const userRouter = require('./routes/userRoutes');
+const patientRouter = require('./routes/patientRoutes');
+const doctorRouter = require('./routes/doctorRoutes');
 
 app.use(helmet());
 
@@ -36,6 +38,8 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/patients', patientRouter);
+app.use('/api/v1/doctors', doctorRouter);
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
