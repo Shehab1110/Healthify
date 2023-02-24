@@ -1,4 +1,5 @@
 const User = require('../models/userModel');
+const Appointment = require('../models/appointmentModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 
@@ -27,6 +28,21 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
     data: null,
   });
 });
+
+exports.cancelAppointmentByID = async (req, res, next) => {
+  const appointment = await Appointment.findByIdAndUpdate(
+    req.params.id,
+    {
+      status: 'cancelled',
+    },
+    { new: true }
+  );
+  if (!appointment) return next(new AppError('Invalid appointment ID!'), 400);
+  res.status(200).json({
+    status: 'success',
+    data: appointment,
+  });
+};
 
 // For Admin
 exports.getAllUsers = catchAsync(async (req, res, next) => {

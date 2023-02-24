@@ -1,4 +1,5 @@
 const Doctor = require('../models/doctorModel');
+const Appointment = require('../models/appointmentModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
 
@@ -12,7 +13,6 @@ exports.setAvailableTimes = catchAsync(async (req, res, next) => {
     availableTimes.startTime,
     availableTimes.endTime
   );
-  console.log(availableTimes);
 
   if (doctor) {
     // check if an object with the same day already exists in the array
@@ -39,5 +39,20 @@ exports.setAvailableTimes = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: doctor,
+  });
+});
+
+exports.viewMyAppointments = catchAsync(async (req, res, next) => {
+  const { user } = req;
+  const appointments = await Appointment.find({ doctor_id: user.id }).populate(
+    'patient_id',
+    'name'
+  );
+
+  if (appointments.length === 0)
+    return next(new AppError('No upcoming appointments yet!'), 404);
+  res.status(200).json({
+    status: 'success',
+    data: appointments,
   });
 });

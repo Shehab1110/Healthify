@@ -35,9 +35,21 @@ exports.searchDoctors = catchAsync(async (req, res, next) => {
   });
 });
 
-// View Doctor
+// View Doctor By his ID
 exports.viewDoctorByID = catchAsync(async (req, res, next) => {
   const doctor = await Doctor.findById(req.params.id).select('+availableTimes');
+  if (!doctor) return next(new AppError('This doctor ID is invalid!'), 400);
+  res.status(200).json({
+    status: 'success',
+    data: doctor,
+  });
+});
+
+// View Doctor By UserID
+exports.viewDoctorByUserID = catchAsync(async (req, res, next) => {
+  const doctor = await Doctor.findOne({ user_id: req.params.id }).select(
+    '+availableTimes'
+  );
   if (!doctor) return next(new AppError('This doctor ID is invalid!'), 400);
   res.status(200).json({
     status: 'success',
@@ -114,5 +126,20 @@ exports.scheduleAppointment = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: appointment,
+  });
+});
+
+exports.viewMyAppointments = catchAsync(async (req, res, next) => {
+  const { user } = req;
+  const appointments = await Appointment.find({ patient_id: user.id }).populate(
+    'doctor_id',
+    'name'
+  );
+
+  if (appointments.length === 0)
+    return next(new AppError('No upcoming appointments yet!'), 404);
+  res.status(200).json({
+    status: 'success',
+    data: appointments,
   });
 });
