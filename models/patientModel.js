@@ -19,7 +19,7 @@ const patientSchema = new mongoose.Schema({
   //   },
   height: {
     type: Number,
-    min: [150, 'Please enter your height correctly in cm!'],
+    min: [100, 'Please enter your height correctly in cm!'],
     max: [250, 'Please enter your height correctly in cm!'],
     select: false,
   },
@@ -46,6 +46,31 @@ const patientSchema = new mongoose.Schema({
     },
   ],
   select: false,
+  medicineReminders: [
+    {
+      name: {
+        type: String,
+        required: [true, 'Please enter the medicine name'],
+        trim: true,
+        minlength: 3,
+        maxlength: 50,
+      },
+      type: {
+        type: String,
+        enum: ['pill', 'liquid', 'injection'],
+        required: [true, 'Please select the type of medicine'],
+      },
+      frequency: {
+        type: Number,
+        required: [true, 'Please enter the frequency of the medicine in hours'],
+        min: 1,
+      },
+      nextReminder: {
+        type: Date,
+        required: [true, 'Please enter the date and time of the next reminder'],
+      },
+    },
+  ],
 });
 
 const Patient = mongoose.model('Patient', patientSchema);

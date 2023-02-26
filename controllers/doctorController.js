@@ -1,6 +1,9 @@
 const Doctor = require('../models/doctorModel');
+const Appointment = require('../models/appointmentModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
+const Patient = require('../models/patientModel');
+const EMR = require('../models/emrModel');
 
 exports.setAvailableTimes = catchAsync(async (req, res, next) => {
   const { availableTimes } = req.body;
@@ -12,7 +15,6 @@ exports.setAvailableTimes = catchAsync(async (req, res, next) => {
     availableTimes.startTime,
     availableTimes.endTime
   );
-  console.log(availableTimes);
 
   if (doctor) {
     // check if an object with the same day already exists in the array
@@ -41,3 +43,110 @@ exports.setAvailableTimes = catchAsync(async (req, res, next) => {
     data: doctor,
   });
 });
+
+exports.viewMyAppointments = catchAsync(async (req, res, next) => {
+  const { user } = req;
+  const appointments = await Appointment.find({ doctor_id: user.id }).populate(
+    'patient_id',
+    'name'
+  );
+
+  if (appointments.length === 0)
+    return next(new AppError('No upcoming appointments yet!'), 404);
+  res.status(200).json({
+    status: 'success',
+    data: appointments,
+  });
+});
+
+exports.markAppointmentAsCompletedByID = catchAsync(async (req, res, next) => {
+  const { id } = req.body;
+  const appointment = await Appointment.findById(id);
+  if (appointment.status === 'cancelled')
+    return next(new AppError('The appointment was cancelled!'), 400);
+  if (appointment.status === 'completed')
+    return next(new AppError('The appointment is already completed!'), 400);
+  appointment.status = 'completed';
+  await appointment.save();
+  res.status(200).json({
+    status: 'success',
+    data: appointment,
+  });
+});
+
+exports.createPatientEMR = catchAsync(async (req, res, next) => {
+  const doctorID = req.user.id;
+  const patientID = req.body.id;
+  const appointment = await Appointment.findOne({
+    patient_id: patientID,
+    doctor_id: doctorID,
+    status: 'completed',
+  });
+  if (!appointment)
+    return next(new AppError(`You can't access this patient's EMR!`, 401));
+  const emr = await EMR.create({
+    patient: patientID,
+    doctor: doctorID,
+    appointment: appointment.id,
+    diagnosis: req.body.diagnosis,
+    medication: req.body.medication,
+    dosage: req.body.dosage,
+    instructions: req.body.instructions,
+    notes: req.body.notes,
+    createdAt: appointment.date,
+  });
+  appointment.emr = emr.id;
+  await appointment.save();
+  await Patient.findOneAndUpdate(
+    { user_id: patientID },
+    {
+      $push: { emrs: emr.id },
+    }
+  );
+  res.status(200).json({
+    status: 'success',
+    data: emr,
+  });
+});
+
+exports.viewPatientEMR = catchAsync(async (req, res, next) => {
+  const appointment = await Appointment.findById(req.params.id);
+  if (!appointment) return next(new AppError('Invalid appointment ID!'), 400);
+  if (!(appointment.status === 'completed'))
+    return next(new AppError(`Appointment isn't completed!`, 400));
+  const emr = await EMR.findById(appointment.emr);
+  if (!emr)
+    return next(
+      new AppError(`EMR hasn't been created for this appointment yet!`, 400)
+    );
+  res.status(200).json({
+    status: 'success',
+    data: emr,
+  });
+});
+
+exports.updatePatientEMR = async (req, res, next) => {
+  const { appointmentID, diagnosis, medication, dosage, instructions, notes } =
+    req.body;
+  const appointment = await Appointment.findById(appointmentID);
+  if (!appointment) return next(new AppError('Invalid Appointment ID!', 400));
+  if (appointment.emr === null)
+    return next(
+      new AppError(`EMR hasn't been created for this appointment yet!`, 400)
+    );
+  const emr = await EMR.findByIdAndUpdate(
+    appointment.emr,
+    {
+      diagnosis,
+      medication,
+      dosage,
+      instructions,
+      notes,
+    },
+    { new: true }
+  );
+  res.status(200).json({
+    status: 'success',
+    data: emr,
+  });
+};

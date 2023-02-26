@@ -1,5 +1,6 @@
 const express = require('express');
 const patientController = require('../controllers/patientController');
+const userController = require('../controllers/userController');
 const authController = require('../controllers/authController');
 
 const router = express.Router();
@@ -22,11 +23,37 @@ router.get(
   patientController.viewDoctorByID
 );
 
+router.get(
+  '/viewDoctorByUserID/:id',
+  authController.protect,
+  patientController.viewDoctorByUserID
+);
+
+router.get(
+  '/viewMyAppointments',
+  authController.protect,
+  authController.permitOnly('patient'),
+  patientController.viewMyAppointments
+);
+
 router.post(
   '/scheduleAppointment',
   authController.protect,
   authController.permitOnly('patient'),
   patientController.scheduleAppointment
+);
+
+router.post(
+  '/calculateMyBMI',
+  authController.protect,
+  authController.permitOnly('patient'),
+  patientController.calculateBMI
+);
+
+router.patch(
+  '/cancelAppointmentByID/:id',
+  authController.protect,
+  userController.cancelAppointmentByID
 );
 
 module.exports = router;
