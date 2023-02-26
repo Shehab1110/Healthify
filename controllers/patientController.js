@@ -143,3 +143,22 @@ exports.viewMyAppointments = catchAsync(async (req, res, next) => {
     data: appointments,
   });
 });
+
+exports.calculateBMI = catchAsync(async (req, res, next) => {
+  const { user } = req;
+  const { weight, height } = req.body;
+  if (!weight || !height)
+    return next(
+      new AppError('Please enter weight in KG and height in cm!', 400)
+    );
+  const bmi = weight / (height / 100) ** 2;
+  const patient = await Patient.findOneAndUpdate(
+    { user_id: user.id },
+    { weight, height, bmi },
+    { new: true }
+  ).select('+bmi');
+  res.status(200).json({
+    status: 'success',
+    data: patient,
+  });
+});

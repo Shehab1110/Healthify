@@ -2,6 +2,7 @@ const User = require('../models/userModel');
 const Appointment = require('../models/appointmentModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
+const Doctor = require('../models/doctorModel');
 
 // For Authenticated User
 exports.updateMe = catchAsync(async (req, res, next) => {
@@ -38,6 +39,17 @@ exports.cancelAppointmentByID = async (req, res, next) => {
     { new: true }
   );
   if (!appointment) return next(new AppError('Invalid appointment ID!'), 400);
+  const { date, time, doctor_id } = appointment;
+  const doctor = await Doctor.findOne({ user_id: doctor_id }).select(
+    '+availableTimes'
+  );
+  const existingIndex = doctor.availableTimes.findIndex(
+    (o) => o.day.getTime() === date.getTime()
+  );
+  if (existingIndex === -1)
+    return next(new AppError('Something Went Wrong!', 400));
+  doctor.availableTimes[existingIndex].hourRange.push(time);
+  await doctor.save();
   res.status(200).json({
     status: 'success',
     data: appointment,

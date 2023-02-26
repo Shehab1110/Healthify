@@ -43,6 +43,13 @@ router.post(
   patientController.scheduleAppointment
 );
 
+router.post(
+  '/calculateMyBMI',
+  authController.protect,
+  authController.permitOnly('patient'),
+  patientController.calculateBMI
+);
+
 router.patch(
   '/cancelAppointmentByID/:id',
   authController.protect,

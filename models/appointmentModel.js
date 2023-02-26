@@ -27,6 +27,7 @@ const appointmentSchema = new mongoose.Schema({
   emr: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'EMR',
+    default: null,
   },
   payment: {
     type: mongoose.Schema.Types.ObjectId,
