@@ -25,6 +25,17 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     validate: [validator.isEmail, 'Please provide a valid email!'],
   },
+  phone_number: {
+    type: String,
+    validate: {
+      validator: function (v) {
+        const regex = /^(\+20|0)?1[0125][0-9]{8}$/;
+        return regex.test(v);
+      },
+      message: 'Please provide a valid phone number!',
+    },
+    required: true,
+  },
   password: {
     type: String,
     required: [true, 'Please provide a password!'],

@@ -1,5 +1,7 @@
+const { default: mongoose } = require('mongoose');
 const Appointment = require('../models/appointmentModel');
 const Doctor = require('../models/doctorModel');
+const EMR = require('../models/emrModel');
 const Patient = require('../models/patientModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
@@ -21,8 +23,7 @@ exports.searchDoctors = catchAsync(async (req, res, next) => {
   const { name, speciality } = req.params;
   if (!name && !speciality)
     return next(
-      new AppError('You should provide a name or a speciality!'),
-      400
+      new AppError('You should provide a name or a speciality!', 400)
     );
   const doctors = await Doctor.find({
     name: { $regex: `^${name}` },
@@ -144,6 +145,31 @@ exports.viewMyAppointments = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.viewAppointmentEMR = catchAsync(async (req, res, next) => {
+  const appointmentID = req.params.id;
+  if (!mongoose.Types.ObjectId.isValid(appointmentID))
+    return next(new AppError('Please provide a valid appointment ID!', 400));
+  const emr = await EMR.findOne({ appointment: appointmentID });
+  if (!emr)
+    return next(new AppError('No EMR related to this appointment!', 404));
+  res.status(200).json({
+    status: 'success',
+    data: emr,
+  });
+});
+
+exports.viewMyEMRs = catchAsync(async (req, res, next) => {
+  const { user } = req;
+  const patient = await Patient.findOne({ user_id: user.id }).populate('emrs');
+  const { emrs } = patient;
+  if (emrs === 0)
+    return next(new AppError('No EMRs have been created yet!', 404));
+  res.status(200).json({
+    status: 'success',
+    data: emrs,
+  });
+});
+
 exports.calculateBMI = catchAsync(async (req, res, next) => {
   const { user } = req;
   const { weight, height } = req.body;
@@ -157,6 +183,120 @@ exports.calculateBMI = catchAsync(async (req, res, next) => {
     { weight, height, bmi },
     { new: true }
   ).select('+bmi');
+  res.status(200).json({
+    status: 'success',
+    data: patient,
+  });
+});
+
+exports.createMedicineReminder = catchAsync(async (req, res, next) => {
+  const { user } = req;
+  const { name, type, frequency } = req.body;
+  const nextReminder = new Date(Date.now() + frequency * 3600 * 1000);
+  const patient = await Patient.findOne({ user_id: user.id });
+  patient.medicineReminders.push({ name, type, frequency, nextReminder });
+  await patient.save();
+  res.status(201).json({
+    status: 'success',
+    data: patient.medicineReminders,
+  });
+});
+
+exports.viewMyMedicineReminders = catchAsync(async (req, res, next) => {
+  const { user } = req;
+  const patient = await Patient.findOne({ user_id: user.id });
+  if (!patient)
+    return next(
+      new AppError('Something wnet wrong, please try again later!'),
+      500
+    );
+  const { medicineReminders } = patient;
+  res.status(200).json({
+    status: 'success',
+    data: medicineReminders,
+  });
+});
+
+exports.updateMedicineReminder = catchAsync(async (req, res, next) => {
+  const { user } = req;
+  const { name, type, frequency } = req.body;
+  const { reminderID } = req.params;
+  let nextReminder;
+  if (frequency) nextReminder = new Date(Date.now() + frequency * 3600 * 1000);
+  const patient = await Patient.findOne({ user_id: user.id });
+  const existingReminderIndex = patient.medicineReminders.findIndex(
+    (o) => o.id === reminderID
+  );
+  if (existingReminderIndex === -1)
+    return next(new AppError('Invalid Reminder ID!', 400));
+  const existingReminder = patient.medicineReminders[existingReminderIndex];
+  patient.medicineReminders[existingReminderIndex] = {
+    name: name || existingReminder.name,
+    type: type || existingReminder.type,
+    frequency: frequency || existingReminder.frequency,
+    nextReminder: nextReminder || existingReminder.frequency,
+  };
+  await patient.save();
+  res.status(200).json({
+    status: 'success',
+    data: patient,
+  });
+});
+
+exports.deactivateMedicineReminder = catchAsync(async (req, res, next) => {
+  const { user } = req;
+  if (!req.body.reminderID)
+    return next(new AppError('Please provide a valid reminder ID!'), 400);
+  if (!mongoose.Types.ObjectId.isValid(req.body.reminderID))
+    return next(new AppError('Invalid reminder ID!'), 400);
+  const patient = await Patient.findOne({ user_id: user.id });
+  const existingReminderIndex = patient.medicineReminders.findIndex(
+    (o) => o.id === req.body.reminderID
+  );
+  if (existingReminderIndex === -1)
+    return next(new AppError('No reminder with that ID!', 400));
+  patient.medicineReminders[existingReminderIndex].active = false;
+  await patient.save();
+  res.status(200).json({
+    status: 'success',
+    data: patient.medicineReminders,
+  });
+});
+
+exports.activateMedicineReminder = catchAsync(async (req, res, next) => {
+  const { user } = req;
+  if (!req.body.reminderID)
+    return next(new AppError('Please provide a valid reminder ID!'), 400);
+  if (!mongoose.Types.ObjectId.isValid(req.body.reminderID))
+    return next(new AppError('Invalid reminder ID!'), 400);
+  const patient = await Patient.findOne({ user_id: user.id });
+  const existingReminderIndex = patient.medicineReminders.findIndex(
+    (o) => o.id === req.body.reminderID
+  );
+  if (existingReminderIndex === -1)
+    return next(new AppError('No reminder with that ID!', 400));
+  patient.medicineReminders[existingReminderIndex].active = true;
+  await patient.save();
+  res.status(200).json({
+    status: 'success',
+    data: patient.medicineReminders,
+  });
+});
+
+exports.deleteMedicineReminder = catchAsync(async (req, res, next) => {
+  const { user } = req;
+  const patient = await Patient.findOne({ user_id: user.id });
+  if (!req.params.reminderID)
+    return next(new AppError('Please provide a reminder ID!', 400));
+  if (!mongoose.Types.ObjectId.isValid(req.params.reminderID))
+    return next(new AppError('Invalid reminder ID!'), 400);
+  const existingReminderIndex = patient.medicineReminders.findIndex(
+    (o) => o.id === req.params.reminderID
+  );
+  if (existingReminderIndex === -1)
+    return next(new AppError('No reminder with that ID!', 400));
+  patient.medicineReminders.splice(existingReminderIndex, 1);
+  await patient.save();
   res.status(200).json({
     status: 'success',
     data: patient,
