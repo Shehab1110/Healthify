@@ -13,10 +13,6 @@ const patientSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
-  //   phone_number: {
-  //     type: String,
-  //     validate: [validator.isMobilePhone, 'Please provide a valid phone number!'],
-  //   },
   height: {
     type: Number,
     min: [100, 'Please enter your height correctly in cm!'],
@@ -64,10 +60,15 @@ const patientSchema = new mongoose.Schema({
         type: Number,
         required: [true, 'Please enter the frequency of the medicine in hours'],
         min: 1,
+        max: 168,
       },
       nextReminder: {
         type: Date,
         required: [true, 'Please enter the date and time of the next reminder'],
+      },
+      active: {
+        type: Boolean,
+        default: true,
       },
     },
   ],

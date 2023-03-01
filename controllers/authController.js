@@ -36,6 +36,7 @@ exports.signUp = catchAsync(async (req, res, next) => {
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
+    phone_number: req.body.phone_number,
   });
   await Patient.create({ user_id: newUser.id, name: req.body.name });
   createSendToken(newUser, 201, res);

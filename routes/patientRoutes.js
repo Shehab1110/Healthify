@@ -36,6 +36,27 @@ router.get(
   patientController.viewMyAppointments
 );
 
+router.get(
+  '/viewMyEMRs',
+  authController.protect,
+  authController.permitOnly('patient'),
+  patientController.viewMyEMRs
+);
+
+router.get(
+  '/viewAppointmentEMR/:id',
+  authController.protect,
+  authController.permitOnly('patient'),
+  patientController.viewAppointmentEMR
+);
+
+router.get(
+  '/viewMedicineReminders',
+  authController.protect,
+  authController.permitOnly('patient'),
+  patientController.viewMyMedicineReminders
+);
+
 router.post(
   '/scheduleAppointment',
   authController.protect,
@@ -50,10 +71,45 @@ router.post(
   patientController.calculateBMI
 );
 
+router.post(
+  '/createMedicineReminder',
+  authController.protect,
+  authController.permitOnly('patient'),
+  patientController.createMedicineReminder
+);
+
 router.patch(
   '/cancelAppointmentByID/:id',
   authController.protect,
   userController.cancelAppointmentByID
+);
+
+router.patch(
+  '/updateMedicineReminder/:reminderID',
+  authController.protect,
+  authController.permitOnly('patient'),
+  patientController.updateMedicineReminder
+);
+
+router.patch(
+  '/deactivateMedicineReminder',
+  authController.protect,
+  authController.permitOnly('patient'),
+  patientController.deactivateMedicineReminder
+);
+
+router.patch(
+  '/activateMedicineReminder',
+  authController.protect,
+  authController.permitOnly('patient'),
+  patientController.activateMedicineReminder
+);
+
+router.delete(
+  '/deleteMedicineReminder/:reminderID',
+  authController.protect,
+  authController.permitOnly('patient'),
+  patientController.deleteMedicineReminder
 );
 
 module.exports = router;
