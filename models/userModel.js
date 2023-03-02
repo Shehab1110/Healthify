@@ -83,7 +83,7 @@ userSchema.pre('save', async function (next) {
 
 // Adding the passwordChangedAt property before saving th DB
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password' || this.isNew)) return next();
+  if (!this.isModified('password') || this.isNew) return next();
   this.passwordChangeAt = Date.now() - 1000;
   next();
 });
