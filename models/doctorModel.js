@@ -15,12 +15,18 @@ const doctorSchema = new mongoose.Schema({
   },
   speciality: {
     type: String,
+    required: true,
   },
   certification: {
     type: String,
   },
   office_location: {
-    type: String,
+    type: [
+      {
+        latitude: Number,
+        longitude: Number,
+      },
+    ],
   },
   appointments: [
     {
@@ -48,6 +54,20 @@ const doctorSchema = new mongoose.Schema({
     ],
     default: [],
     select: false,
+  },
+  ratingsAndReviews: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Ratings',
+    },
+  ],
+  ratingNum: {
+    type: Number,
+    default: 0,
+  },
+  rate: {
+    type: Number,
+    default: 4,
   },
 });
 

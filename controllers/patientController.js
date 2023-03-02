@@ -3,8 +3,16 @@ const Appointment = require('../models/appointmentModel');
 const Doctor = require('../models/doctorModel');
 const EMR = require('../models/emrModel');
 const Patient = require('../models/patientModel');
+const Rating = require('../models/ratingsSchema');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
+
+const { Configuration, OpenAIApi } = require('openai');
+const configuration = new Configuration({
+  organization: 'org-NKvTpaIjb2QEEcmGmqu8gh9S',
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
 
 // search doctors by speciality
 exports.searchDoctorsBySpeciality = async (req, res, next) => {
@@ -300,5 +308,74 @@ exports.deleteMedicineReminder = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: patient,
+  });
+});
+
+exports.rateAndReview = catchAsync(async (req, res, next) => {
+  const { user } = req;
+  const { doctorID, rating, review } = req.body;
+  if (!doctorID || !rating || !review)
+    return next(
+      new AppError('Please provide doctorID, rating and a review!', 400)
+    );
+  if (!mongoose.Types.ObjectId.isValid(doctorID))
+    return next(new AppError('Please provide a valid doctor ID!', 400));
+  const patient = await Patient.findOne({ user_id: user.id }).populate(
+    'appointments'
+  );
+  const existingAppointmentIndex = patient.appointments.findIndex(
+    (o) => o.doctor_id == doctorID && o.status === 'completed'
+  );
+  if (existingAppointmentIndex === -1)
+    return next(new AppError(`You can't rate this doctor!`, 401));
+  let doctor = await Doctor.findOne({ user_id: doctorID }).populate(
+    'ratingsAndReviews'
+  );
+  if (doctor.ratingsAndReviews.length > 0) {
+    const existingRRIndex = doctor.ratingsAndReviews.findIndex(
+      (o) => JSON.stringify(o.user) === JSON.stringify(user.id)
+    );
+    if (existingRRIndex !== -1)
+      return next(new AppError('You already rated this doctor once!', 403));
+  }
+  const newRating = await Rating.create({
+    rating,
+    review,
+    user: user.id,
+  });
+  doctor = await Doctor.findOneAndUpdate(
+    { user_id: doctorID },
+    {
+      $push: { ratingsAndReviews: newRating.id },
+    },
+    { new: true }
+  ).populate('ratingsAndReviews');
+  const ratings = doctor.ratingsAndReviews;
+  let totalRating = 0;
+  for (let i = 0; i < ratings.length; i++) {
+    totalRating += ratings[i].rating;
+  }
+  const averageRating = totalRating / ratings.length;
+  doctor.rate = averageRating;
+  doctor.ratingNum = ratings.length;
+  await doctor.save();
+  res.status(200).json({
+    status: 'success',
+    data: doctor,
+  });
+});
+
+exports.diagnoseSymptoms = catchAsync(async (req, res, next) => {
+  if (!req.body.symptoms)
+    return next(new AppError('Please provide your symptoms!', 400));
+  const response = await openai.createCompletion({
+    model: 'text-davinci-003',
+    prompt: `Based on my symptoms, can you help diagnose what medical condition I might have? My symptoms include: ${req.body.symptoms}.`,
+    max_tokens: 2048,
+    temperature: 0,
+  });
+  res.status(200).json({
+    status: 'success',
+    data: response.data.choices[0].text,
   });
 });

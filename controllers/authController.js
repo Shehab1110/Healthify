@@ -49,6 +49,7 @@ exports.doctorSignUp = catchAsync(async (req, res, next) => {
     name: req.body.name,
     role: 'doctor',
     email: req.body.email,
+    phone_number: req.body.phone_number,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
   });

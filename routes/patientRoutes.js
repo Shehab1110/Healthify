@@ -78,6 +78,15 @@ router.post(
   patientController.createMedicineReminder
 );
 
+router.post(
+  '/rateAndReview',
+  authController.protect,
+  authController.permitOnly('patient'),
+  patientController.rateAndReview
+);
+
+router.post('/diagnoseSymptoms', patientController.diagnoseSymptoms);
+
 router.patch(
   '/cancelAppointmentByID/:id',
   authController.protect,
