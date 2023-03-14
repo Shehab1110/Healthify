@@ -71,6 +71,11 @@ const userSchema = new mongoose.Schema({
     Date,
     select: false,
   },
+  location: {
+    coordinates: {
+      type: [Number],
+    },
+  },
 });
 
 // Encrypting User password before saving to DB
