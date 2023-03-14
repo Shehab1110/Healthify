@@ -37,6 +37,10 @@ exports.signUp = catchAsync(async (req, res, next) => {
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
     phone_number: req.body.phone_number,
+    location: {
+      type: { type: req.body.location.type },
+      coordinates: req.body.location.coordinates,
+    },
   });
   await Patient.create({ user_id: newUser.id, name: req.body.name });
   createSendToken(newUser, 201, res);
@@ -52,11 +56,19 @@ exports.doctorSignUp = catchAsync(async (req, res, next) => {
     phone_number: req.body.phone_number,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
+    location: {
+      type: { type: req.body.location.type },
+      coordinates: req.body.location.coordinates,
+    },
   });
   await Doctor.create({
     user_id: newUser.id,
     name: req.body.name,
     speciality: req.body.speciality,
+    location: {
+      type: { type: req.body.location.type },
+      coordinates: req.body.location.coordinates,
+    },
   });
   createSendToken(newUser, 201, res);
 });
@@ -165,3 +177,45 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
 
   createSendToken(user, 200, res);
 });
+
+exports.reOpenApp = catchAsync(async (req, res, next) => {
+  let token;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith('Bearer')
+  ) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+  if (!token)
+    return next(
+      new AppError('You are not logged in, please login to get access.', 401)
+    );
+
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+  const user = await User.findById(decoded.id);
+  if (!user)
+    return next(
+      new AppError('The user of this token does not exist anymore!', 401)
+    );
+  if (user.changedPasswordAfter(decoded.iat)) {
+    return next(
+      new AppError(
+        'User recently changed the password, please login again!',
+        401
+      )
+    );
+  }
+  let data;
+  if (user.role === 'patient') {
+    data = await Patient.findOne({ user_id: user.id }).populate('appointments');
+  } else if (user.role === 'doctor') {
+    data = await Doctor.findOne({ user_id: user.id }).populate('appointments');
+  } else {
+    return next(new AppError('User role not supported.', 401));
+  }
+  res.status(200).json({
+    status: 'success',
+    data,
+  });
+})

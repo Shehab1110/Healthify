@@ -20,19 +20,15 @@ const doctorSchema = new mongoose.Schema({
   certification: {
     type: String,
   },
-  office_location: {
-    type: [
-      {
-        latitude: Number,
-        longitude: Number,
-      },
-    ],
+  location: {
+    coordinates: {
+      type: [Number],
+    },
   },
   appointments: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Appointment',
-      select: false,
     },
   ],
   availableTimes: {

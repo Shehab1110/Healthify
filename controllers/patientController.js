@@ -1,4 +1,5 @@
 const { default: mongoose } = require('mongoose');
+const { Configuration, OpenAIApi } = require('openai');
 const Appointment = require('../models/appointmentModel');
 const Doctor = require('../models/doctorModel');
 const EMR = require('../models/emrModel');
@@ -6,8 +7,8 @@ const Patient = require('../models/patientModel');
 const Rating = require('../models/ratingsSchema');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
+const sortByDistance = require('../utils/geolocation');
 
-const { Configuration, OpenAIApi } = require('openai');
 const configuration = new Configuration({
   organization: 'org-NKvTpaIjb2QEEcmGmqu8gh9S',
   apiKey: process.env.OPENAI_API_KEY,
@@ -16,14 +17,16 @@ const openai = new OpenAIApi(configuration);
 
 // search doctors by speciality
 exports.searchDoctorsBySpeciality = async (req, res, next) => {
+  const { user } = req;
   const { speciality } = req.params;
   if (!speciality)
     return next(new AppError('Please provide a speciality!', 400));
   const doctors = await Doctor.find({ speciality });
   if (doctors.length === 0) return next(new AppError('No Doctors Found!', 404));
+  const nearestDoctors = doctors.sort((a, b) => sortByDistance(a, b, user));
   res.status(200).json({
     status: 'success',
-    data: doctors,
+    data: nearestDoctors,
   });
 };
 

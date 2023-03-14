@@ -5,6 +5,7 @@ const userController = require('../controllers/userController');
 const router = express.Router();
 
 router.get('/', userController.getAllUsers);
+router.get('/reOpenApp', authController.reOpenApp);
 router.post('/signup', authController.signUp);
 router.post('/login', authController.login);
 router.patch(
