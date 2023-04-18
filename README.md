@@ -1,72 +1,48 @@
-# ***Features***
-### *Patient features*:
-Search for doctors by speciality or name and getting the nearest doctors, 
-Schedule appointments with doctors,
-Cancel appointments, 
-Reschedule appointments, 
-View electronic medical records (EMRs) associated with their appointments, 
-Calculate BMI, 
-Create, update, and manage medicine reminders, 
-Rate and review doctors, 
-Diagnose symptoms and get a feedback, 
-Access Health Resources,
-Communicate with doctor
-### *Doctor features*:
-View their appointments, 
-View patient EMRs, 
-Set their available times, 
-Mark appointments as completed,
-Cancel appointment, 
-Create and update patient EMRs,
-Communicate with patient, 
-### *User management features*:
-User authentication and authorization, 
-User sign-up and login, 
-Update user profile, 
-Reset forgotten password, 
-Admin can create doctor accounts, 
-# ***Technologies Used***
-Node.js, 
-Express.js, 
-MongoDB, 
-Mongoose, 
-JSON Web Token (JWT) for authentication, 
-bcrypt for password hashing, 
-Nodemailer for sending email, 
-Render for deployment, 
-# ***Installation and Usage***
-Clone this repository to your local machine.
-Install dependencies using `npm install`.
-Create a `config.env` file and add the needed environment variables.
-Start the server using `npm start`.
-Use `http://localhost:3000` in your postman and add the route of any API and start testing and using!
-# ***API Documentation***
-## *Patient routes*
-##### `GET /searchDoctorsBySpeciality/:speciality:` Search for doctors by speciality
-##### `GET /searchDoctors/:name/:speciality:` Search for doctors by name and speciality
-##### `GET /viewDoctorByID/:id:` View a doctor's profile by ID
-##### `GET /viewDoctorByUserID/:id:` View a doctor's profile by user ID
-##### `GET /viewMyAppointments:` View a patient's appointments
-##### `GET /viewMyEMRs:` View a patient's electronic medical records
-##### `GET /viewAppointmentEMR/:id:` View an appointment's electronic medical record
-##### `GET /viewMedicineReminders:` View a patient's medicine reminders
-##### `POST /scheduleAppointment:` Schedule an appointment with a doctor
-##### `POST /calculateMyBMI:` Calculate a patient's BMI
-##### `POST /createMedicineReminder:` Create a medicine reminder
-##### `POST /rateAndReview:` Rate and review a doctor
-##### `POST /diagnoseSymptoms:` Diagnose symptoms
-##### `PATCH /cancelAppointmentByID/:id:` Cancel an appointment by ID
-##### `PATCH /updateMedicineReminder/:reminderID:` Update a medicine reminder by ID
-##### `PATCH /deactivateMedicineReminder:` Deactivate a medicine reminder
-##### `PATCH /activateMedicineReminder:` Activate a medicine reminder
-##### `DELETE /deleteMedicineReminder/:reminderID:` Delete a medicine reminder by ID
-## *Doctor routes*
-##### `GET /viewMyAppointments:` View a doctor's appointments
-##### `GET /viewPatientEMR/:id:` View a patient's electronic medical record
-##### `PATCH /setAvailableTimes:` Set a doctor's available times
-##### `PATCH /cancelAppointmentByID:` Cancel an appointment by ID
-##### `PATCH /markAppointmentAsCompletedByID:` Mark an appointment as completed by ID
-##### `PATCH /createPatientEMR:` Create a patient's electronic medical record
-##### `PATCH /updatePatientEMR:` Update a patient's electronic medical record
-# ***Project Status***
+<h1 align="center">Healthify</h1>
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Node.js badge">
+  <img src="https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express badge">
+  <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB badge">
+</p>
+Healthify is a Back-end server designed to help medical professionals and patients' medical life, including appointments, EMRs, and medicine reminders, symptoms diagnosis. It provides a secure, centralized platform for patients and healthcare providers to collaborate and share information, improving the quality of care provided.
+
+## :rocket: Getting Started
+
+To run this project locally, you need to have Node.js and MongoDB installed on your machine.
+
+### Prerequisites
+
+- Node.js
+- MongoDB
+- NPM or Yarn
+
+### Installation
+
+1. Clone this repo to your local machine using `git clone https://github.com/<your-username>/healthify.git`.
+2. Go to the project directory using `cd natours`.
+3. Install the dependencies using `npm install` or `yarn install`.
+4. Create a `.env` file in the root folder and add the following environment variables:
+
+`
+NODE_ENV=development
+PORT=3000
+DATABASE=<your-mongodb-connection-string>
+DATABASE_PASSWORD=<your-mongodb-password>
+JWT_SECRET=<your-jwt-secret>
+JWT_EXPIRES_IN=90d
+JWT_COOKIE_EXPIRES_IN=90
+EMAIL_USERNAME=<your-email-username>
+EMAIL_PASSWORD=<your-email-password>
+EMAIL_HOST=<your-email-host>
+EMAIL_PORT=<your-email-port>
+EMAIL_FROM=<your-email-address>
+STRIPE_SECRET_KEY=<your-stripe-secret-key>`
+
+Run the app using npm start or yarn start.<br> Open your browser and go to http://localhost:3000.<br> 
+
+### :sparkles: Features
+User registration and login with JWT authentication<br> Password reset with email verification<br> User profile update and deletion<br> User roles and permissions<br> Searching for nearest doctors by specialty and/or name<br> Scheduling appointments and cancelling appointments<br> Online payment using stripe<br> Accessing patient EMR<br> Crete, Read, Update operations on patient's EMR by doctor with right permissions<br> Ratings and reviews of a doctor with validations in place<br> Calculating BMI<br> CRUD operations on Medicine Reminders for patient<br> Communication between patient and doctor<br> Error handling and logging<br>
+### :hammer_and_wrench: Technologies
+Node.js<br> Express<br> MongoDB<br> Mongoose<br> Stripe<br> Nodemailer<br> Helmet<br> Morgan<br> Bcrypt<br> Jsonwebtoken<br> Validator<br> JWT<br> 
+### :construction: Project Status
 This project is actively being developed and maintained, continuously adding new features and improving existing functionality. As such, there is always work to be done.
