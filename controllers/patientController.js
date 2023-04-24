@@ -7,29 +7,12 @@ const Patient = require('../models/patientModel');
 const Rating = require('../models/ratingsSchema');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
-const sortByDistance = require('../utils/geolocation');
-const { pipeline } = require('nodemailer/lib/xoauth2');
 
 const configuration = new Configuration({
   organization: 'org-NKvTpaIjb2QEEcmGmqu8gh9S',
   apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
-
-// search doctors by speciality
-// exports.searchDoctorsBySpeciality = async (req, res, next) => {
-//   const { user } = req;
-//   const { speciality } = req.params;
-//   if (!speciality)
-//     return next(new AppError('Please provide a speciality!', 400));
-//   const doctors = await Doctor.find({ speciality });
-//   if (doctors.length === 0) return next(new AppError('No Doctors Found!', 404));
-//   const nearestDoctors = doctors.sort((a, b) => sortByDistance(a, b, user));
-//   res.status(200).json({
-//     status: 'success',
-//     data: nearestDoctors,
-//   });
-// };
 
 exports.searchDoctorsBySpeciality = async (req, res, next) => {
   const { user } = req;
@@ -81,7 +64,6 @@ exports.searchDoctors = catchAsync(async (req, res, next) => {
     return next(
       new AppError('You should provide a name or a speciality!', 400)
     );
-  console.log(user.location.coordinates);
   let pipeline = [
     {
       $geoNear: {
@@ -128,6 +110,7 @@ exports.searchDoctors = catchAsync(async (req, res, next) => {
     data: doctors,
   });
 });
+
 // View Doctor By his ID
 exports.viewDoctorByID = catchAsync(async (req, res, next) => {
   const doctor = await Doctor.findById(req.params.id).select('+availableTimes');
