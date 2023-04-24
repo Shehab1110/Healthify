@@ -21,9 +21,12 @@ const doctorSchema = new mongoose.Schema({
     type: String,
   },
   location: {
-    coordinates: {
-      type: [Number],
+    type: {
+      type: String,
+      default: 'Point',
+      enum: ['Point'],
     },
+    coordinates: [Number],
   },
   appointments: [
     {
@@ -66,6 +69,8 @@ const doctorSchema = new mongoose.Schema({
     default: 4,
   },
 });
+
+doctorSchema.index({ location: '2dsphere' });
 
 doctorSchema.methods.getHourRange = function (start, end) {
   const hourRange = [];
