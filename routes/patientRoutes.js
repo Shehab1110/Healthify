@@ -6,13 +6,13 @@ const authController = require('../controllers/authController');
 const router = express.Router();
 
 router.get(
-  '/searchDoctorsBySpeciality/:speciality',
+  '/searchDoctorsBySpeciality/:speciality/:coordinates',
   authController.protect,
   patientController.searchDoctorsBySpeciality
 );
 
 router.get(
-  '/searchDoctors/:name/:speciality',
+  '/searchDoctors/:name/:speciality?',
   authController.protect,
   patientController.searchDoctors
 );

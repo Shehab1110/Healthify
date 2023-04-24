@@ -8,6 +8,7 @@ const Rating = require('../models/ratingsSchema');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 const sortByDistance = require('../utils/geolocation');
+const { pipeline } = require('nodemailer/lib/xoauth2');
 
 const configuration = new Configuration({
   organization: 'org-NKvTpaIjb2QEEcmGmqu8gh9S',
@@ -16,37 +17,117 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 // search doctors by speciality
+// exports.searchDoctorsBySpeciality = async (req, res, next) => {
+//   const { user } = req;
+//   const { speciality } = req.params;
+//   if (!speciality)
+//     return next(new AppError('Please provide a speciality!', 400));
+//   const doctors = await Doctor.find({ speciality });
+//   if (doctors.length === 0) return next(new AppError('No Doctors Found!', 404));
+//   const nearestDoctors = doctors.sort((a, b) => sortByDistance(a, b, user));
+//   res.status(200).json({
+//     status: 'success',
+//     data: nearestDoctors,
+//   });
+// };
+
 exports.searchDoctorsBySpeciality = async (req, res, next) => {
   const { user } = req;
-  const { speciality } = req.params;
+  const { speciality, coordinates } = req.params;
+  const [latitude, longitude] = coordinates.split(',');
+  const maxDistance = 100000;
   if (!speciality)
-    return next(new AppError('Please provide a speciality!', 400));
-  const doctors = await Doctor.find({ speciality });
+    return next(new AppError('Please provide a specialty!', 400));
+  const doctors = await Doctor.aggregate([
+    {
+      $geoNear: {
+        near: {
+          type: 'Point',
+          coordinates: [parseFloat(longitude), parseFloat(latitude)],
+        },
+        distanceField: 'distance',
+        maxDistance: maxDistance,
+        spherical: true,
+        distanceMultiplier: 0.001,
+      },
+    },
+    {
+      $match: { speciality },
+    },
+    {
+      $project: {
+        name: 1,
+        speciality: 1,
+        availableTimes: 1,
+        distance: 1,
+        rate: 1,
+        ratingNum: 1,
+      },
+    },
+  ]);
   if (doctors.length === 0) return next(new AppError('No Doctors Found!', 404));
-  const nearestDoctors = doctors.sort((a, b) => sortByDistance(a, b, user));
+
   res.status(200).json({
     status: 'success',
-    data: nearestDoctors,
+    data: doctors,
   });
 };
 
 exports.searchDoctors = catchAsync(async (req, res, next) => {
+  const { user } = req;
   const { name, speciality } = req.params;
+  const maxDistance = 100000;
   if (!name && !speciality)
     return next(
       new AppError('You should provide a name or a speciality!', 400)
     );
-  const doctors = await Doctor.find({
-    name: { $regex: `^${name}` },
-    speciality,
-  });
+  console.log(user.location.coordinates);
+  let pipeline = [
+    {
+      $geoNear: {
+        near: {
+          type: 'Point',
+          coordinates: [
+            parseFloat(user.location.coordinates[0]),
+            parseFloat(user.location.coordinates[1]),
+          ],
+        },
+        distanceField: 'distance',
+        maxDistance: maxDistance,
+        spherical: true,
+        distanceMultiplier: 0.001,
+      },
+    },
+    {
+      $match: {
+        name: { $regex: `^Dr. ${name}` },
+      },
+    },
+    {
+      $project: {
+        name: 1,
+        speciality: 1,
+        availableTimes: 1,
+        distance: 1,
+        rate: 1,
+        ratingNum: 1,
+      },
+    },
+  ];
+  if (speciality) {
+    pipeline.unshift({
+      $match: {
+        speciality: { $regex: speciality, $options: 'i' },
+      },
+    });
+  }
+  const doctors = await Doctor.aggregate(pipeline);
   if (doctors.length === 0) return next(new AppError('No doctors found!'), 404);
   res.status(200).json({
     status: 'success',
     data: doctors,
   });
 });
-
 // View Doctor By his ID
 exports.viewDoctorByID = catchAsync(async (req, res, next) => {
   const doctor = await Doctor.findById(req.params.id).select('+availableTimes');

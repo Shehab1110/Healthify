@@ -57,7 +57,6 @@ exports.doctorSignUp = catchAsync(async (req, res, next) => {
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
     location: {
-      type: { type: req.body.location.type },
       coordinates: req.body.location.coordinates,
     },
   });
@@ -66,7 +65,6 @@ exports.doctorSignUp = catchAsync(async (req, res, next) => {
     name: req.body.name,
     speciality: req.body.speciality,
     location: {
-      type: { type: req.body.location.type },
       coordinates: req.body.location.coordinates,
     },
   });
@@ -206,16 +204,23 @@ exports.reOpenApp = catchAsync(async (req, res, next) => {
       )
     );
   }
-  let data;
   if (user.role === 'patient') {
-    data = await Patient.findOne({ user_id: user.id }).populate('appointments');
+    const patient = await Patient.findOne({ user_id: user.id }).populate(
+      'appointments'
+    );
+    res.status(200).json({
+      status: 'success',
+      patient,
+    });
   } else if (user.role === 'doctor') {
-    data = await Doctor.findOne({ user_id: user.id }).populate('appointments');
+    const doctor = await Doctor.findOne({ user_id: user.id }).populate(
+      'appointments'
+    );
+    res.status(200).json({
+      status: 'success',
+      doctor,
+    });
   } else {
-    return next(new AppError('User role not supported.', 401));
+    return next(new AppError('User role not supported.', 400));
   }
-  res.status(200).json({
-    status: 'success',
-    data,
-  });
-})
+});
