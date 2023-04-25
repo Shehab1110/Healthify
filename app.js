@@ -1,7 +1,10 @@
 const express = require('express');
+const path = require('path');
 const morgan = require('morgan');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
 
 const AppError = require('./utils/appError');
 const globalErrorController = require('./controllers/errorController');
@@ -11,8 +14,19 @@ const userRouter = require('./routes/userRoutes');
 const patientRouter = require('./routes/patientRoutes');
 const doctorRouter = require('./routes/doctorRoutes');
 
+// Serving static files
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Data sanitization against NoSQL query injection
+app.use(mongoSanitize());
+
+// Data sanitization against XSS
+app.use(xss());
+
+// Security HTTP headers
 app.use(helmet());
 
+// Development logging
 console.log(process.env.NODE_ENV);
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
