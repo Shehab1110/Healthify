@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema({
       },
       message: 'Please provide a valid phone number!',
     },
-    required: true,
+    required: [true, 'Please provide a phone number!'],
   },
   password: {
     type: String,
@@ -61,7 +61,10 @@ const userSchema = new mongoose.Schema({
     default: true,
     select: false,
   },
-  photo: String,
+  photo: {
+    type: String,
+    default: 'default.jpg',
+  },
   passwordChangeAt: Date,
   passwordResetToken: {
     type: String,

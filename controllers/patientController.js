@@ -110,7 +110,6 @@ exports.searchDoctors = catchAsync(async (req, res, next) => {
     data: doctors,
   });
 });
-
 // View Doctor By his ID
 exports.viewDoctorByID = catchAsync(async (req, res, next) => {
   const doctor = await Doctor.findById(req.params.id).select('+availableTimes');

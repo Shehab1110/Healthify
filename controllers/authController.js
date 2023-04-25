@@ -38,8 +38,8 @@ exports.signUp = catchAsync(async (req, res, next) => {
     passwordConfirm: req.body.passwordConfirm,
     phone_number: req.body.phone_number,
     location: {
-      type: { type: req.body.location.type },
-      coordinates: req.body.location.coordinates,
+      type: 'Point',
+      coordinates: req.body.coordinates,
     },
   });
   await Patient.create({ user_id: newUser.id, name: req.body.name });
