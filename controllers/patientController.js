@@ -113,10 +113,14 @@ exports.searchDoctors = catchAsync(async (req, res, next) => {
 // View Doctor By his ID
 exports.viewDoctorByID = catchAsync(async (req, res, next) => {
   const doctor = await Doctor.findById(req.params.id).select('+availableTimes');
+  const ratings = await Rating.find({ doctor_id: doctor.id });
   if (!doctor) return next(new AppError('This doctor ID is invalid!'), 400);
   res.status(200).json({
     status: 'success',
-    data: doctor,
+    data: {
+      doctor,
+      ratings,
+    },
   });
 });
 
@@ -137,9 +141,7 @@ exports.scheduleAppointment = catchAsync(async (req, res, next) => {
   const { doctorID, date, time } = req.body;
   if (!doctorID || !date || !time)
     return next(new AppError('Please provide DoctorID, Date and Time!'));
-  const doctor = await Doctor.findOne({ user_id: doctorID }).select(
-    '+availableTimes'
-  );
+  const doctor = await Doctor.findById(doctorID).select('+availableTimes');
   if (!doctor) {
     return next(new AppError('No doctor found with that ID', 404));
   }
@@ -377,13 +379,12 @@ exports.deleteMedicineReminder = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.rateAndReview = catchAsync(async (req, res, next) => {
+exports.rateDoctor = catchAsync(async (req, res, next) => {
   const { user } = req;
-  const { doctorID, rating, review } = req.body;
-  if (!doctorID || !rating || !review)
-    return next(
-      new AppError('Please provide doctorID, rating and a review!', 400)
-    );
+  const { doctorID, rating } = req.body;
+  let data;
+  if (!doctorID || !rating)
+    return next(new AppError('Please provide doctorID and rating!', 400));
   if (!mongoose.Types.ObjectId.isValid(doctorID))
     return next(new AppError('Please provide a valid doctor ID!', 400));
   const patient = await Patient.findOne({ user_id: user.id }).populate(
@@ -394,40 +395,92 @@ exports.rateAndReview = catchAsync(async (req, res, next) => {
   );
   if (existingAppointmentIndex === -1)
     return next(new AppError(`You can't rate this doctor!`, 401));
-  let doctor = await Doctor.findOne({ user_id: doctorID }).populate(
-    'ratingsAndReviews'
-  );
-  if (doctor.ratingsAndReviews.length > 0) {
-    const existingRRIndex = doctor.ratingsAndReviews.findIndex(
-      (o) => JSON.stringify(o.user) === JSON.stringify(user.id)
-    );
-    if (existingRRIndex !== -1)
-      return next(new AppError('You already rated this doctor once!', 403));
+  try {
+    const newRating = await Rating.create({
+      user: user.id,
+      doctor: doctorID,
+      rating,
+    });
+    data = newRating;
+  } catch (err) {
+    if (err.code === 11000)
+      return next(new AppError('You have already rated this doctor!', 400));
   }
-  const newRating = await Rating.create({
-    rating,
-    review,
-    user: user.id,
-  });
-  doctor = await Doctor.findOneAndUpdate(
-    { user_id: doctorID },
-    {
-      $push: { ratingsAndReviews: newRating.id },
-    },
-    { new: true }
-  ).populate('ratingsAndReviews');
-  const ratings = doctor.ratingsAndReviews;
-  let totalRating = 0;
-  for (let i = 0; i < ratings.length; i++) {
-    totalRating += ratings[i].rating;
-  }
-  const averageRating = totalRating / ratings.length;
-  doctor.rate = averageRating;
-  doctor.ratingNum = ratings.length;
-  await doctor.save();
   res.status(200).json({
     status: 'success',
-    data: doctor,
+    data,
+  });
+});
+
+exports.reviewDoctor = catchAsync(async (req, res, next) => {
+  const { user } = req;
+  const { doctorID, review } = req.body;
+  if (!doctorID || !review)
+    return next(new AppError('Please provide doctorID and review!', 400));
+  if (!mongoose.Types.ObjectId.isValid(doctorID))
+    return next(new AppError('Please provide a valid doctor ID!', 400));
+  let existingRating = await Rating.findOne({
+    user: user.id,
+    doctor: doctorID,
+  });
+  if (!existingRating)
+    return next(
+      new AppError(
+        `You can't review this doctor, please rate the doctor first!`,
+        401
+      )
+    );
+  if (existingRating.review)
+    return next(new AppError(`You've already reviewed this doctor!`, 401));
+  existingRating.review = review;
+  await existingRating.save();
+  res.status(200).json({
+    status: 'success',
+    data: existingRating,
+  });
+});
+
+exports.editReview = catchAsync(async (req, res, next) => {
+  const { reviewID } = req.params;
+  const { doctorID, review } = req.body;
+  if (!doctorID || !reviewID)
+    return next(new AppError('Please provide doctorID and reviewID!', 400));
+  if (!mongoose.Types.ObjectId.isValid(doctorID))
+    return next(new AppError('Please provide a valid doctor ID!', 400));
+  if (!mongoose.Types.ObjectId.isValid(reviewID))
+    return next(new AppError('Please provide a valid review ID!', 400));
+  const existingRating = await Rating.findByIdAndUpdate(
+    reviewID,
+    {
+      review,
+    },
+    { new: true }
+  );
+  if (!existingRating)
+    return next(new AppError('No review with that ID!', 400));
+  res.status(200).json({
+    status: 'success',
+    data: existingRating,
+  });
+});
+
+exports.deleteReview = catchAsync(async (req, res, next) => {
+  const { reviewID } = req.params;
+  if (!reviewID) return next(new AppError('Please provide a review ID!', 400));
+  if (!mongoose.Types.ObjectId.isValid(reviewID))
+    return next(new AppError('Please provide a valid review ID!', 400));
+  const existingRating = await Rating.findByIdAndUpdate(
+    reviewID,
+    {
+      review: '',
+    },
+    { new: true }
+  );
+  if (!existingRating)
+    return next(new AppError('No review with that ID!', 400));
+  res.status(200).json({
+    status: 'success',
+    data: existingRating,
   });
 });
 

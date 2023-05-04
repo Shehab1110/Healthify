@@ -1,3 +1,6 @@
+/* eslint-disable no-plusplus */
+/* eslint-disable no-unused-expressions */
+/* eslint-disable radix */
 const mongoose = require('mongoose');
 
 const doctorSchema = new mongoose.Schema({
@@ -54,19 +57,13 @@ const doctorSchema = new mongoose.Schema({
     default: [],
     select: false,
   },
-  ratingsAndReviews: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Ratings',
-    },
-  ],
   ratingNum: {
     type: Number,
     default: 0,
   },
   rate: {
     type: Number,
-    default: 4,
+    default: 5,
   },
 });
 
@@ -74,15 +71,23 @@ doctorSchema.index({ location: '2dsphere' });
 
 doctorSchema.methods.getHourRange = function (start, end) {
   const hourRange = [];
+  let returnedHourRange = [];
   let hour = parseInt(start.split(':')[0]);
   const endHour = parseInt(end.split(':')[0]);
-
   while (hour <= endHour) {
-    hourRange.push(`${hour.toString().padStart(2, '0')}:00`);
+    let ext;
+    hour < 12 ? (ext = 'AM') : (ext = 'PM');
+    hourRange.push(`${hour.toString().padStart(2, '0')}:00 ${ext}`);
+    if (hour !== endHour)
+      hourRange.push(`${hour.toString().padStart(2, '0')}:30 ${ext}`);
     hour++;
   }
-
-  return hourRange;
+  returnedHourRange = hourRange.map((el) => {
+    if (parseInt(el.split(':')[0]) > 12)
+      el = `${parseInt(el.split(':')[0]) - 12}:${el.split(':')[1]}`;
+    return el;
+  });
+  return returnedHourRange;
 };
 
 const Doctor = mongoose.model('Doctor', doctorSchema);
