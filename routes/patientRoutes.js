@@ -79,10 +79,31 @@ router.post(
 );
 
 router.post(
-  '/rateAndReview',
+  '/rateDoctor',
   authController.protect,
   authController.permitOnly('patient'),
-  patientController.rateAndReview
+  patientController.rateDoctor
+);
+
+router.post(
+  '/reviewDoctor',
+  authController.protect,
+  authController.permitOnly('patient'),
+  patientController.reviewDoctor
+);
+
+router.patch(
+  '/editReview/:reviewID',
+  authController.protect,
+  authController.permitOnly('patient'),
+  patientController.editReview
+);
+
+router.patch(
+  '/deleteReview/:reviewID',
+  authController.protect,
+  authController.permitOnly('patient'),
+  patientController.deleteReview
 );
 
 router.post('/diagnoseSymptoms', patientController.diagnoseSymptoms);

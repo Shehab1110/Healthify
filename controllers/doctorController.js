@@ -7,6 +7,7 @@ const EMR = require('../models/emrModel');
 
 exports.setAvailableTimes = catchAsync(async (req, res, next) => {
   const { availableTimes } = req.body;
+  availableTimes.hourRange = [];
   const doctorId = req.user.id;
   const doctor = await Doctor.findOne({ user_id: doctorId }).select(
     '+availableTimes'
