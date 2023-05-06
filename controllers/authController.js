@@ -163,11 +163,6 @@ exports.forgotPassword = async (req, res, next) => {
     message
   );
 
-  // await sendEmail({
-  //   email: req.body.email,
-  //   subject: 'Your password reset token (Valid for 10 min)',
-  //   message,
-  // });
   res.status(200).json({
     status: 'success',
     message: 'Token has been sent to your email!',
