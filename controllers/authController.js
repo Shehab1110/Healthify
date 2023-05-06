@@ -6,7 +6,6 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
-const sendEmail = require('../utils/email');
 const Patient = require('../models/patientModel');
 const Doctor = require('../models/doctorModel');
 const emailSender = require('../utils/email');
