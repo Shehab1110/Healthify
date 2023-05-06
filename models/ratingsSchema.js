@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const catchAsync = require('../utils/catchAsync');
 const Doctor = require('./doctorModel');
 
 const ratingsSchema = new mongoose.Schema(
