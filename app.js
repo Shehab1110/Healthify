@@ -55,6 +55,7 @@ app.use('/api/v1/users', userRouter);
 app.use('/api/v1/patients', patientRouter);
 app.use('/api/v1/doctors', doctorRouter);
 
+// Handling unhandled routes
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });

@@ -9,6 +9,7 @@ const AppError = require('../utils/appError');
 const sendEmail = require('../utils/email');
 const Patient = require('../models/patientModel');
 const Doctor = require('../models/doctorModel');
+const emailSender = require('../utils/email');
 
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -43,6 +44,27 @@ exports.signUp = catchAsync(async (req, res, next) => {
     },
   });
   await Patient.create({ user_id: newUser.id, name: req.body.name });
+  await emailSender(
+    newUser,
+    'Welcome to Healthify!',
+    `Dear ${newUser.name}},
+    Thank you for signing up for Healthify! We are excited to have you on board.
+    To get started, please log in to your account using the credentials you provided during the sign-up process. 
+    If you have any questions or concerns, please don't hesitate to reach out to our support team at sfe.healthify@gmail.com.
+    We hope you enjoy using Healthify and look forward to helping you achieve your goals.
+    Best regards,
+    Shehab Ashraf
+    Healthify Team`,
+    `<p>Dear ${newUser.name},</p>
+    <p>Thank you for signing up for Healthify! We are excited to have you on board.</p>
+    <p>To get started, please log in to your account using the credentials you provided during the sign-up process.</p>
+    <p>If you have any questions or concerns, please don't hesitate to reach out to our support team at sfe.healthify@gmail.com
+    We hope you enjoy using Healthify and look forward to helping you achieve your goals.</p>
+    <p>Best regards,</p>
+    <p>Shehab Ashraf</p>
+    <p>Healthify Team</p>
+    `
+  );
   createSendToken(newUser, 201, res);
 });
 

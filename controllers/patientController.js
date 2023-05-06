@@ -478,6 +478,8 @@ exports.deleteReview = catchAsync(async (req, res, next) => {
   );
   if (!existingRating)
     return next(new AppError('No review with that ID!', 400));
+  if (existingRating.user.toString() !== req.user.id)
+    return next(new AppError('You can only delete your own reviews!', 401));
   res.status(200).json({
     status: 'success',
     data: existingRating,
