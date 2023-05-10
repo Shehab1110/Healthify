@@ -2,6 +2,7 @@
 /* eslint-disable no-unused-expressions */
 /* eslint-disable radix */
 const mongoose = require('mongoose');
+const AppError = require('../utils/appError');
 
 const doctorSchema = new mongoose.Schema({
   name: {
@@ -30,6 +31,10 @@ const doctorSchema = new mongoose.Schema({
       enum: ['Point'],
     },
     coordinates: [Number],
+  },
+  appointmentPrice: {
+    type: Number,
+    // required: [true, 'Please tell your appointment price!'],
   },
   appointments: [
     {
@@ -88,6 +93,29 @@ doctorSchema.methods.getHourRange = function (start, end) {
     return el;
   });
   return returnedHourRange;
+};
+
+doctorSchema.methods.checkAvailability = async function (date, time, next) {
+  const appointmentDate = new Date(date);
+  // Check if the doctor is available at the selected date
+  const day = this.availableTimes.find(
+    (el) => el.day.getTime() === appointmentDate.getTime()
+  );
+  if (!day)
+    return next(
+      new AppError('The doctor schedule is not yet defined for that day.', 400)
+    );
+  // Check if the doctor is available at the selected time
+  if (!day.hourRange.includes(time))
+    return next(new AppError('Selected time is no longer available!', 400));
+  const newAvailableHours = day.hourRange.filter((el) => el !== time);
+  day.hourRange = newAvailableHours;
+
+  const existingObjIndex = this.availableTimes.findIndex(
+    (o) => o.day.getTime() === new Date(this.availableTimes.day).getTime()
+  );
+  this.availableTimes[existingObjIndex] = day;
+  return true;
 };
 
 const Doctor = mongoose.model('Doctor', doctorSchema);

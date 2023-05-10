@@ -29,9 +29,14 @@ const appointmentSchema = new mongoose.Schema({
     ref: 'EMR',
     default: null,
   },
-  payment: {
+  paymentMethod: {
+    type: String,
+    enum: ['cash', 'card'],
+    default: 'cash',
+  },
+  booking: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Payment',
+    ref: 'Booking',
   },
 });
 

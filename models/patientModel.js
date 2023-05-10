@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const AppError = require('../utils/appError');
 
 const patientSchema = new mongoose.Schema({
   name: {
@@ -74,6 +75,21 @@ const patientSchema = new mongoose.Schema({
     },
   ],
 });
+
+patientSchema.methods.checkAvailability = function (date, time, next) {
+  const existingAppointment = this.appointments.find(
+    (o) =>
+      o.date.getTime() === new Date(date).getTime() &&
+      o.time === time &&
+      o.status === 'scheduled'
+  );
+  if (existingAppointment) {
+    return next(
+      new AppError(`You already have an appointment at the same time`, 400)
+    );
+  }
+  return true;
+};
 
 const Patient = mongoose.model('Patient', patientSchema);
 
