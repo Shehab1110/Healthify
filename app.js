@@ -13,6 +13,7 @@ const app = express();
 const userRouter = require('./routes/userRoutes');
 const patientRouter = require('./routes/patientRoutes');
 const doctorRouter = require('./routes/doctorRoutes');
+const bookingRouter = require('./routes/bookingRoutes');
 
 // Serving static files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -54,6 +55,7 @@ app.get('/', (req, res) => {
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/patients', patientRouter);
 app.use('/api/v1/doctors', doctorRouter);
+app.use('/api/v1/bookings', bookingRouter);
 
 // Handling unhandled routes
 app.all('*', (req, res, next) => {

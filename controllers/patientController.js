@@ -1,5 +1,6 @@
 const { default: mongoose } = require('mongoose');
 const { Configuration, OpenAIApi } = require('openai');
+
 const Appointment = require('../models/appointmentModel');
 const Doctor = require('../models/doctorModel');
 const EMR = require('../models/emrModel');
@@ -7,6 +8,10 @@ const Patient = require('../models/patientModel');
 const Rating = require('../models/ratingsSchema');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
+const {
+  getCheckoutSession,
+  createBookingCheckout,
+} = require('./bookingController');
 
 const configuration = new Configuration({
   organization: 'org-NKvTpaIjb2QEEcmGmqu8gh9S',
@@ -138,9 +143,11 @@ exports.viewDoctorByUserID = catchAsync(async (req, res, next) => {
 
 exports.scheduleAppointment = catchAsync(async (req, res, next) => {
   const { user } = req;
-  const { doctorID, date, time } = req.body;
-  if (!doctorID || !date || !time)
-    return next(new AppError('Please provide DoctorID, Date and Time!'));
+  const { doctorID, date, time, paymentMethod } = req.body;
+  if (!doctorID || !date || !time || !paymentMethod)
+    return next(
+      new AppError('Please provide DoctorID, Date, Time and Payment Method!')
+    );
   const doctor = await Doctor.findById(doctorID).select('+availableTimes');
   if (!doctor) {
     return next(new AppError('No doctor found with that ID', 404));
@@ -148,62 +155,60 @@ exports.scheduleAppointment = catchAsync(async (req, res, next) => {
   const patient = await Patient.findOne({ user_id: user.id }).populate(
     'appointments'
   );
-  const existingAppointment = patient.appointments.find(
-    (o) =>
-      o.date.getTime() === new Date(date).getTime() &&
-      o.time === time &&
-      o.status === 'scheduled'
-  );
-  if (existingAppointment) {
-    return next(
-      new AppError(`You already have an appointment at the same time`, 400)
+  const patientCheck = patient.checkAvailability(date, time, next);
+  if (!patientCheck) return next();
+
+  const doctorCheck = await doctor.checkAvailability(date, time, next);
+  if (!doctorCheck) return next();
+
+  if (paymentMethod === 'card') {
+    const session = await getCheckoutSession(req, doctor, date, time);
+    if (!session)
+      return next(
+        new AppError('Something went wrong, please try again later ', 500)
+      );
+    const booking = await createBookingCheckout(session, date, time);
+    if (!booking)
+      return next(
+        new AppError('Something went wrong, please try again later ', 500)
+      );
+    res.status(200).json({
+      status: 'success',
+      data: {
+        session: session,
+        booking: booking,
+      },
+    });
+  } else if (paymentMethod === 'cash') {
+    const appointment = await Appointment.create({
+      patient_id: user.id,
+      doctor_id: doctorID,
+      date,
+      time,
+      paymentMethod,
+    });
+
+    await Patient.findOneAndUpdate(
+      { user_id: user.id },
+      {
+        $push: { appointments: appointment.id },
+      }
     );
+
+    await Doctor.findOneAndUpdate(
+      { user_id: doctorID },
+      {
+        $push: { appointments: appointment.id },
+      }
+    );
+
+    await doctor.save();
+
+    res.status(200).json({
+      status: 'success',
+      data: appointment,
+    });
   }
-  const { availableTimes } = doctor;
-  const appointmentDate = new Date(date);
-  const day = availableTimes.find(
-    (el) => el.day.getTime() === appointmentDate.getTime()
-  );
-  if (!day)
-    return next(
-      new AppError('The doctor schedule is not yet defined for that day.', 400)
-    );
-  if (!day.hourRange.includes(time))
-    return next(new AppError('Selected time is unavailable!'), 400);
-  const newAvailableHours = day.hourRange.filter((el) => el !== time);
-  day.hourRange = newAvailableHours;
-
-  const appointment = await Appointment.create({
-    patient_id: user.id,
-    doctor_id: doctorID,
-    date,
-    time,
-  });
-
-  await Patient.findOneAndUpdate(
-    { user_id: user.id },
-    {
-      $push: { appointments: appointment.id },
-    }
-  );
-
-  await Doctor.findOneAndUpdate(
-    { user_id: doctorID },
-    {
-      $push: { appointments: appointment.id },
-    }
-  );
-
-  const existingObjIndex = doctor.availableTimes.findIndex(
-    (o) => o.day.getTime() === new Date(availableTimes.day).getTime()
-  );
-  doctor.availableTimes[existingObjIndex] = day;
-  await doctor.save();
-
-  res.status(200).json({
-    status: 'success',
-    data: appointment,
-  });
 });
 
 exports.viewMyAppointments = catchAsync(async (req, res, next) => {

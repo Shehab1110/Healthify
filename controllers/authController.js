@@ -6,7 +6,6 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
-const sendEmail = require('../utils/email');
 const Patient = require('../models/patientModel');
 const Doctor = require('../models/doctorModel');
 const emailSender = require('../utils/email');
@@ -157,11 +156,13 @@ exports.forgotPassword = async (req, res, next) => {
 
   const message = `Forgot your password? Submit a patch request with your new password and password confirm to: ${resetURL}. \nIf you didn't forget your password, please ignore this email.`;
 
-  await sendEmail({
-    email: req.body.email,
-    subject: 'Your password reset token (Valid for 10 min)',
+  await emailSender(
+    user,
+    'Your password reset token (Valid for 10 min)',
     message,
-  });
+    message
+  );
+
   res.status(200).json({
     status: 'success',
     message: 'Token has been sent to your email!',
