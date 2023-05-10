@@ -1,6 +1,5 @@
 const { default: mongoose } = require('mongoose');
 const { Configuration, OpenAIApi } = require('openai');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const Appointment = require('../models/appointmentModel');
 const Doctor = require('../models/doctorModel');
