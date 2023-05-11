@@ -158,7 +158,7 @@ exports.scheduleAppointment = catchAsync(async (req, res, next) => {
   const patientCheck = patient.checkAvailability(date, time, next);
   if (!patientCheck) return next();
 
-  const doctorCheck = await doctor.checkAvailability(date, time, next);
+  const doctorCheck = doctor.checkAvailability(date, time, next);
   if (!doctorCheck) return next();
 
   if (paymentMethod === 'card') {
@@ -172,13 +172,14 @@ exports.scheduleAppointment = catchAsync(async (req, res, next) => {
       return next(
         new AppError('Something went wrong, please try again later ', 500)
       );
-    res.status(200).json({
-      status: 'success',
-      data: {
-        session: session,
-        booking: booking,
-      },
-    });
+    // res.status(303).json({
+    //   status: 'success',
+    //   data: {
+    //     session: session,
+    //     booking: booking,
+    //   },
+    // });
+    res.redirect(session.url);
   } else if (paymentMethod === 'cash') {
     const appointment = await Appointment.create({
       patient_id: user.id,
