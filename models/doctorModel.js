@@ -95,7 +95,7 @@ doctorSchema.methods.getHourRange = function (start, end) {
   return returnedHourRange;
 };
 
-doctorSchema.methods.checkAvailability = async function (date, time, next) {
+doctorSchema.methods.checkAvailability = function (date, time, next) {
   const appointmentDate = new Date(date);
   // Check if the doctor is available at the selected date
   const day = this.availableTimes.find(
