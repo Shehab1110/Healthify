@@ -172,14 +172,13 @@ exports.scheduleAppointment = catchAsync(async (req, res, next) => {
       return next(
         new AppError('Something went wrong, please try again later ', 500)
       );
-    // res.status(303).json({
-    //   status: 'success',
-    //   data: {
-    //     session: session,
-    //     booking: booking,
-    //   },
-    // });
-    res.redirect(session.url);
+    res.status(200).json({
+      status: 'success',
+      data: {
+        session: session,
+        booking: booking,
+      },
+    });
   } else if (paymentMethod === 'cash') {
     const appointment = await Appointment.create({
       patient_id: user.id,
