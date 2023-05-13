@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
+const chalk = require('chalk');
 
 const AppError = require('./utils/appError');
 const globalErrorController = require('./controllers/errorController');
@@ -28,7 +29,7 @@ app.use(xss());
 app.use(helmet());
 
 // Development logging
-console.log(process.env.NODE_ENV);
+console.log(chalk.green(process.env.NODE_ENV));
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
