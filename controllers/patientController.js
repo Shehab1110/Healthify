@@ -1,5 +1,6 @@
 const { default: mongoose } = require('mongoose');
 const { Configuration, OpenAIApi } = require('openai');
+const validator = require('validator');
 
 const Appointment = require('../models/appointmentModel');
 const Doctor = require('../models/doctorModel');
@@ -150,6 +151,12 @@ exports.scheduleAppointment = catchAsync(async (req, res, next) => {
     return next(
       new AppError('Please provide DoctorID, Date, Time and Payment Method!')
     );
+  if (
+    !validator.isISO8601(date) ||
+    !validator.isAfter(date, new Date().toISOString())
+  )
+    return next(new AppError('Please provide a valid date!', 400));
+
   const doctor = await Doctor.findById(doctorID).select('+availableTimes');
   if (!doctor) {
     return next(new AppError('No doctor found with that ID', 404));
@@ -210,6 +217,8 @@ exports.scheduleAppointment = catchAsync(async (req, res, next) => {
       status: 'success',
       data: appointment,
     });
+  } else {
+    return next(new AppError('Please provide a valid payment method!', 400));
   }
 });
 
