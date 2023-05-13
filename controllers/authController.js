@@ -97,6 +97,10 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!email || !password)
     return next(new AppError('Please provide email and password!', 400));
   const user = await User.findOne({ email }).select('+password');
+  if (user.active === false)
+    return next(
+      new AppError('Your account is not active, please contact admin!', 401)
+    );
   if (!user || !(await user.checkPassword(password, user.password))) {
     return next(new AppError('Incorrect email or password!', 401));
   }
@@ -218,6 +222,10 @@ exports.reOpenApp = catchAsync(async (req, res, next) => {
   if (!user)
     return next(
       new AppError('The user of this token does not exist anymore!', 401)
+    );
+  if (user.active === false)
+    return next(
+      new AppError('Your account is not active, please contact admin!', 401)
     );
   if (user.changedPasswordAfter(decoded.iat)) {
     return next(

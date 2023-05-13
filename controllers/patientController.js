@@ -1,5 +1,6 @@
 const { default: mongoose } = require('mongoose');
 const { Configuration, OpenAIApi } = require('openai');
+const validator = require('validator');
 
 const Appointment = require('../models/appointmentModel');
 const Doctor = require('../models/doctorModel');
@@ -150,6 +151,12 @@ exports.scheduleAppointment = catchAsync(async (req, res, next) => {
     return next(
       new AppError('Please provide DoctorID, Date, Time and Payment Method!')
     );
+  if (
+    !validator.isISO8601(date) ||
+    !validator.isAfter(date, new Date().toISOString())
+  )
+    return next(new AppError('Please provide a valid date!', 400));
+
   const doctor = await Doctor.findById(doctorID).select('+availableTimes');
   if (!doctor) {
     return next(new AppError('No doctor found with that ID', 404));
@@ -210,6 +217,8 @@ exports.scheduleAppointment = catchAsync(async (req, res, next) => {
       status: 'success',
       data: appointment,
     });
+  } else {
+    return next(new AppError('Please provide a valid payment method!', 400));
   }
 });
 
@@ -230,7 +239,7 @@ exports.viewMyAppointments = catchAsync(async (req, res, next) => {
 
 exports.viewAppointmentEMR = catchAsync(async (req, res, next) => {
   const appointmentID = req.params.id;
-  if (!mongoose.Types.ObjectId.isValid(appointmentID))
+  if (!validator.isMongoId(appointmentID))
     return next(new AppError('Please provide a valid appointment ID!', 400));
   const emr = await EMR.findOne({ appointment: appointmentID });
   if (!emr)
@@ -330,7 +339,7 @@ exports.deactivateMedicineReminder = catchAsync(async (req, res, next) => {
   const { user } = req;
   if (!req.body.reminderID)
     return next(new AppError('Please provide a valid reminder ID!'), 400);
-  if (!mongoose.Types.ObjectId.isValid(req.body.reminderID))
+  if (!validator.isMongoId(req.body.reminderID))
     return next(new AppError('Invalid reminder ID!'), 400);
   const patient = await Patient.findOne({ user_id: user.id });
   const existingReminderIndex = patient.medicineReminders.findIndex(
@@ -350,7 +359,7 @@ exports.activateMedicineReminder = catchAsync(async (req, res, next) => {
   const { user } = req;
   if (!req.body.reminderID)
     return next(new AppError('Please provide a valid reminder ID!'), 400);
-  if (!mongoose.Types.ObjectId.isValid(req.body.reminderID))
+  if (!validator.isMongoId(req.body.reminderID))
     return next(new AppError('Invalid reminder ID!'), 400);
   const patient = await Patient.findOne({ user_id: user.id });
   const existingReminderIndex = patient.medicineReminders.findIndex(
@@ -371,7 +380,7 @@ exports.deleteMedicineReminder = catchAsync(async (req, res, next) => {
   const patient = await Patient.findOne({ user_id: user.id });
   if (!req.params.reminderID)
     return next(new AppError('Please provide a reminder ID!', 400));
-  if (!mongoose.Types.ObjectId.isValid(req.params.reminderID))
+  if (!validator.isMongoId(req.params.reminderID))
     return next(new AppError('Invalid reminder ID!'), 400);
   const existingReminderIndex = patient.medicineReminders.findIndex(
     (o) => o.id === req.params.reminderID
@@ -392,7 +401,7 @@ exports.rateDoctor = catchAsync(async (req, res, next) => {
   let data;
   if (!doctorID || !rating)
     return next(new AppError('Please provide doctorID and rating!', 400));
-  if (!mongoose.Types.ObjectId.isValid(doctorID))
+  if (!validator.isMongoId(doctorID))
     return next(new AppError('Please provide a valid doctor ID!', 400));
   const patient = await Patient.findOne({ user_id: user.id }).populate(
     'appointments'
@@ -424,7 +433,7 @@ exports.reviewDoctor = catchAsync(async (req, res, next) => {
   const { doctorID, review } = req.body;
   if (!doctorID || !review)
     return next(new AppError('Please provide doctorID and review!', 400));
-  if (!mongoose.Types.ObjectId.isValid(doctorID))
+  if (!validator.isMongoId(doctorID))
     return next(new AppError('Please provide a valid doctor ID!', 400));
   let existingRating = await Rating.findOne({
     user: user.id,
@@ -452,9 +461,9 @@ exports.editReview = catchAsync(async (req, res, next) => {
   const { doctorID, review } = req.body;
   if (!doctorID || !reviewID)
     return next(new AppError('Please provide doctorID and reviewID!', 400));
-  if (!mongoose.Types.ObjectId.isValid(doctorID))
+  if (!validator.isMongoId(doctorID))
     return next(new AppError('Please provide a valid doctor ID!', 400));
-  if (!mongoose.Types.ObjectId.isValid(reviewID))
+  if (!validator.isMongoId(reviewID))
     return next(new AppError('Please provide a valid review ID!', 400));
   const existingRating = await Rating.findByIdAndUpdate(
     reviewID,
@@ -474,7 +483,7 @@ exports.editReview = catchAsync(async (req, res, next) => {
 exports.deleteReview = catchAsync(async (req, res, next) => {
   const { reviewID } = req.params;
   if (!reviewID) return next(new AppError('Please provide a review ID!', 400));
-  if (!mongoose.Types.ObjectId.isValid(reviewID))
+  if (!validator.isMongoId(reviewID))
     return next(new AppError('Please provide a valid review ID!', 400));
   const existingRating = await Rating.findByIdAndUpdate(
     reviewID,

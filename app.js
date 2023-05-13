@@ -50,7 +50,11 @@ app.use((req, res, next) => {
 });
 
 app.get('/', (req, res) => {
-  res.status(200).json({ message: 'Hello from server side!' });
+  res.status(200).json({
+    message: 'Hello from server side!',
+    app: 'Healthify',
+    description: `Back-end server designed to help medical professionals and patients' medical life, including appointments, EMRs, and medicine reminders, symptoms diagnosis. It provides a secure, centralized platform for patients and healthcare providers to collaborate and share information, improving the quality of care provided.`,
+  });
 });
 
 app.use('/api/v1/users', userRouter);
