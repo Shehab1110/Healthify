@@ -2,11 +2,13 @@ const mongoose = require('mongoose');
 
 const dotenv = require('dotenv');
 
+const chalk = require('chalk');
+
 dotenv.config({ path: './config.env' });
 
 process.on('uncaughtException', (err) => {
-  console.log('Uncaught Exception!');
-  console.log(err.name, err.message);
+  console.log(chalk.red('Uncaught Exception!'));
+  console.log(chalk.red(err.name, err.message));
   process.exit(1);
 });
 
@@ -24,18 +26,18 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(() => {
-    console.log('Database connection established!');
+    console.log(chalk.green('DB connection successful!'));
   });
 
 const port = process.env.PORT || 8000;
 
 const server = app.listen(port, () => {
-  console.log(`app is running on port: ${port}`);
+  console.log(chalk.green(`App running on port ${port}...`));
 });
 
 process.on('unhandledRejection', (err) => {
-  console.log('Unhandled rejection!');
-  console.log(err.name, err.message);
+  console.log(chalk.red('Unhandled Rejection!'));
+  console.log(chalk.red(err.name, err.message));
   server.close(() => {
     process.exit(1);
   });
