@@ -23,7 +23,7 @@ exports.searchDoctorsBySpeciality = async (req, res, next) => {
   const { user } = req;
   const { speciality, coordinates } = req.params;
   const [latitude, longitude] = coordinates.split(',');
-  const maxDistance = 100000;
+  // const maxDistance = 100000;
   if (!speciality)
     return next(new AppError('Please provide a specialty!', 400));
   const doctors = await Doctor.aggregate([
@@ -34,7 +34,7 @@ exports.searchDoctorsBySpeciality = async (req, res, next) => {
           coordinates: [parseFloat(longitude), parseFloat(latitude)],
         },
         distanceField: 'distance',
-        maxDistance: maxDistance,
+        // maxDistance: maxDistance,
         spherical: true,
         distanceMultiplier: 0.001,
       },
