@@ -24,7 +24,8 @@ exports.searchDoctorsBySpeciality = async (req, res, next) => {
   const { speciality, coordinates } = req.params;
   const [latitude, longitude] = coordinates.split(',');
   // const maxDistance = 100000;
-
+  if (!latitude || !longitude)
+    return next(new AppError('Please provide your location!', 400));
   if (!speciality)
     return next(new AppError('Please provide a specialty!', 400));
   const doctors = await Doctor.aggregate([
