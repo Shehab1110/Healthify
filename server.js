@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
-
 const dotenv = require('dotenv');
 
 const chalk = require('chalk');
+const Doctor = require('./models/doctorModel');
+const scheduleCronJob = require('./utils/cron');
 
 dotenv.config({ path: './config.env' });
 
@@ -34,6 +35,8 @@ const port = process.env.PORT || 8000;
 const server = app.listen(port, () => {
   console.log(chalk.green(`App running on port ${port}...`));
 });
+
+scheduleCronJob(Doctor);
 
 process.on('unhandledRejection', (err) => {
   console.log(chalk.red('Unhandled Rejection!'));

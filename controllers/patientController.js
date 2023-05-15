@@ -1,4 +1,3 @@
-const { default: mongoose } = require('mongoose');
 const { Configuration, OpenAIApi } = require('openai');
 const validator = require('validator');
 
@@ -21,7 +20,6 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 exports.searchDoctorsBySpeciality = async (req, res, next) => {
-  const { user } = req;
   const { speciality, coordinates } = req.params;
   const [latitude, longitude] = coordinates.split(',');
   // const maxDistance = 100000;
@@ -72,7 +70,7 @@ exports.searchDoctors = catchAsync(async (req, res, next) => {
     return next(
       new AppError('You should provide a name or a speciality!', 400)
     );
-  let pipeline = [
+  const pipeline = [
     {
       $geoNear: {
         near: {
