@@ -76,9 +76,6 @@ exports.confirmBooking = catchAsync(async (req, res, next) => {
   await booking.save();
   res.status(200).json({
     status: 'success',
-    data: {
-      appointment: appointment,
-      booking: booking,
-    },
+    message: 'Booking confirmed successfully!',
   });
 });
