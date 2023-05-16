@@ -79,9 +79,7 @@ exports.cancelAppointmentByID = catchAsync(async (req, res, next) => {
   if (!appointment) return next(new AppError('Invalid appointment ID!'), 400);
   const { date, time, patient_id, doctor_id } = appointment;
   const bookingID = appointment.booking;
-  const doctor = await Doctor.findOne({ user_id: doctor_id }).select(
-    '+availableTimes'
-  );
+  const doctor = await Doctor.findById(doctor_id).select('+availableTimes');
   const existingIndex = doctor.availableTimes.findIndex(
     (o) => o.day.getTime() === date.getTime()
   );

@@ -155,6 +155,12 @@ exports.scheduleAppointment = catchAsync(async (req, res, next) => {
     !validator.isAfter(date, new Date().toISOString())
   )
     return next(new AppError('Please provide a valid date!', 400));
+  const dateTimeString = `${date} ${time}`;
+  const dateTime = new Date(dateTimeString);
+  const todayTime = new Date();
+  const timeDifference = dateTime.getTime() - todayTime.getTime();
+  if (timeDifference < 6 * 60 * 60 * 1000)
+    return next(new AppError('You should book at least 6 hours in advance!'));
   const doctor = await Doctor.findById(doctorID).select('+availableTimes');
   if (!doctor) {
     return next(new AppError('No doctor found with that ID', 404));
