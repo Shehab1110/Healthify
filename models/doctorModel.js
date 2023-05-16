@@ -26,11 +26,11 @@ const doctorSchema = new mongoose.Schema({
   },
   about: {
     type: String,
-    required: [true, 'Please tell us about yourself!'],
+    // required: [true, 'Please tell us about yourself!'],
   },
   address: {
     type: String,
-    required: [true, 'Please tell us your address!'],
+    // required: [true, 'Please tell us your address!'],
   },
   location: {
     type: {
@@ -42,7 +42,7 @@ const doctorSchema = new mongoose.Schema({
   },
   appointmentPrice: {
     type: Number,
-    required: [true, 'Please tell your appointment price!'],
+    // required: [true, 'Please tell your appointment price!'],
   },
   appointments: [
     {
