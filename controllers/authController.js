@@ -243,6 +243,7 @@ exports.reOpenApp = catchAsync(async (req, res, next) => {
       status: 'success',
       patient,
       phone_number: user.phone_number,
+      email: user.email,
     });
   } else if (user.role === 'doctor') {
     const doctor = await Doctor.findOne({ user_id: user.id }).populate(
@@ -252,6 +253,7 @@ exports.reOpenApp = catchAsync(async (req, res, next) => {
       status: 'success',
       doctor,
       phone_number: user.phone_number,
+      email: user.email,
     });
   } else {
     return next(new AppError('User role not supported.', 400));
