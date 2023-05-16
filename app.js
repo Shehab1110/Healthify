@@ -42,7 +42,7 @@ const limiter = rateLimit({
 });
 app.use('/api', limiter);
 
-app.use(express.json());
+app.use(express.json({ limit: '100kb' }));
 
 app.use((req, res, next) => {
   req.reqTime = new Date().toISOString();
@@ -50,11 +50,7 @@ app.use((req, res, next) => {
 });
 
 app.get('/', (req, res) => {
-  res.status(200).json({
-    message: 'Hello from server side!',
-    app: 'Healthify',
-    description: `Back-end server designed to help medical professionals and patients' medical life, including appointments, EMRs, and medicine reminders, symptoms diagnosis. It provides a secure, centralized platform for patients and healthcare providers to collaborate and share information, improving the quality of care provided.`,
-  });
+  res.sendFile(path.join(__dirname, 'public', 'rootPage.html'));
 });
 
 app.use('/api/v1/users', userRouter);
