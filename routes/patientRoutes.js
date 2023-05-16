@@ -142,4 +142,18 @@ router.delete(
   patientController.deleteMedicineReminder
 );
 
+router.patch(
+  '/addFavoriteDoctor',
+  authController.protect,
+  authController.permitOnly('patient'),
+  patientController.addFavoriteDoctor
+);
+
+router.patch(
+  '/removeFavoriteDoctor',
+  authController.protect,
+  authController.permitOnly('patient'),
+  patientController.removeFavoriteDoctor
+);
+
 module.exports = router;
