@@ -2,6 +2,7 @@ const { Configuration, OpenAIApi } = require('openai');
 const validator = require('validator');
 
 const Appointment = require('../models/appointmentModel');
+const Booking = require('../models/bookingModel');
 const Doctor = require('../models/doctorModel');
 const EMR = require('../models/emrModel');
 const Patient = require('../models/patientModel');
@@ -154,7 +155,6 @@ exports.scheduleAppointment = catchAsync(async (req, res, next) => {
     !validator.isAfter(date, new Date().toISOString())
   )
     return next(new AppError('Please provide a valid date!', 400));
-
   const doctor = await Doctor.findById(doctorID).select('+availableTimes');
   if (!doctor) {
     return next(new AppError('No doctor found with that ID', 404));
@@ -210,6 +210,16 @@ exports.scheduleAppointment = catchAsync(async (req, res, next) => {
     );
 
     await doctor.save();
+
+    await Booking.create({
+      user: user.id,
+      doctor: doctor.id,
+      appointment: appointment.id,
+      date,
+      time,
+      status: 'confirmed',
+      price: 200,
+    });
 
     res.status(200).json({
       status: 'success',

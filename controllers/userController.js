@@ -1,11 +1,14 @@
 const multer = require('multer');
 const sharp = require('sharp');
+const validator = require('validator');
 
 const User = require('../models/userModel');
 const Appointment = require('../models/appointmentModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 const Doctor = require('../models/doctorModel');
+const Patient = require('../models/patientModel');
+const Booking = require('../models/bookingModel');
 
 // To store the image in memory
 const multerStorage = multer.memoryStorage();
@@ -63,7 +66,9 @@ exports.deleteMe = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.cancelAppointmentByID = async (req, res, next) => {
+exports.cancelAppointmentByID = catchAsync(async (req, res, next) => {
+  if (!validator.isMongoId(req.params.id))
+    return next(new AppError('Invalid appointment ID!'), 400);
   const appointment = await Appointment.findByIdAndUpdate(
     req.params.id,
     {
@@ -72,7 +77,8 @@ exports.cancelAppointmentByID = async (req, res, next) => {
     { new: true }
   );
   if (!appointment) return next(new AppError('Invalid appointment ID!'), 400);
-  const { date, time, doctor_id } = appointment;
+  const { date, time, patient_id, doctor_id } = appointment;
+  const bookingID = appointment.booking;
   const doctor = await Doctor.findOne({ user_id: doctor_id }).select(
     '+availableTimes'
   );
@@ -82,12 +88,25 @@ exports.cancelAppointmentByID = async (req, res, next) => {
   if (existingIndex === -1)
     return next(new AppError('Something Went Wrong!', 400));
   doctor.availableTimes[existingIndex].hourRange.push(time);
+  const UpdatedDoctorAppointments = doctor.appointments.filter(
+    (a) => a.toString() !== appointment.id.toString()
+  );
+  doctor.appointments = UpdatedDoctorAppointments;
   await doctor.save();
+  const patient = await Patient.findOne({ user_id: patient_id });
+  const updatedPatientAppointments = patient.appointments.filter(
+    (a) => a.toString() !== appointment.id.toString()
+  );
+  patient.appointments = updatedPatientAppointments;
+  await patient.save();
+
+  await Booking.findByIdAndUpdate(bookingID, { status: 'cancelled' });
+
   res.status(200).json({
     status: 'success',
     data: appointment,
   });
-};
+});
 
 // For Admin
 exports.getAllUsers = catchAsync(async (req, res, next) => {
