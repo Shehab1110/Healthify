@@ -530,3 +530,40 @@ exports.diagnoseSymptoms = catchAsync(async (req, res, next) => {
     data: response.data.choices[0].text,
   });
 });
+
+exports.addFavoriteDoctor = catchAsync(async (req, res, next) => {
+  const { doctorID } = req.body;
+  if (!doctorID) return next(new AppError('Please provide a doctor ID!', 400));
+  if (!validator.isMongoId(doctorID))
+    return next(new AppError('Please provide a valid doctor ID!', 400));
+  const doctor = await Doctor.findById(doctorID);
+  if (!doctor) return next(new AppError('No doctor with that ID!', 400));
+  const patient = await Patient.findOne({ user_id: req.user.id });
+  if (patient.favoriteDoctors.includes(doctorID))
+    return next(new AppError('This doctor is already in your favorites!', 400));
+  patient.favoriteDoctors.push(doctorID);
+  await patient.save();
+  res.status(200).json({
+    status: 'success',
+    data: patient,
+  });
+});
+
+exports.removeFavoriteDoctor = catchAsync(async (req, res, next) => {
+  const { doctorID } = req.body;
+  if (!doctorID) return next(new AppError('Please provide a doctor ID!', 400));
+  if (!validator.isMongoId(doctorID))
+    return next(new AppError('Please provide a valid doctor ID!', 400));
+  const patient = await Patient.findOne({ user_id: req.user.id });
+  const existingDoctorIndex = patient.favoriteDoctors.findIndex(
+    (o) => o.toString() === doctorID
+  );
+  if (existingDoctorIndex === -1)
+    return next(new AppError('This doctor is not in your favorites!', 400));
+  patient.favoriteDoctors.splice(existingDoctorIndex, 1);
+  await patient.save();
+  res.status(200).json({
+    status: 'success',
+    data: patient,
+  });
+});

@@ -30,6 +30,12 @@ const patientSchema = new mongoose.Schema({
     type: Number,
     select: false,
   },
+  favoriteDoctors: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Doctor',
+    },
+  ],
   appointments: [
     {
       type: mongoose.Schema.Types.ObjectId,
