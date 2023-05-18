@@ -57,6 +57,13 @@ router.get(
   patientController.viewMyMedicineReminders
 );
 
+router.get(
+  '/getFavoriteDoctors',
+  authController.protect,
+  authController.permitOnly('patient'),
+  patientController.getFavoriteDoctors
+);
+
 router.post(
   '/scheduleAppointment',
   authController.protect,

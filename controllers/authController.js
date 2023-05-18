@@ -88,6 +88,7 @@ exports.doctorSignUp = catchAsync(async (req, res, next) => {
     location: {
       coordinates: req.body.location.coordinates,
     },
+    photo: newUser.photo,
   });
   createSendToken(newUser, 201, res);
 });

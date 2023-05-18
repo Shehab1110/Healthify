@@ -52,6 +52,27 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     },
     { new: true, runValidators: true }
   );
+  if (req.body.name && req.user.role === 'patient') {
+    await Patient.findOneAndUpdate(
+      { user_id: req.user.id },
+      { name: req.body.name },
+      { runValidators: true }
+    );
+  }
+  if (req.file && req.user.role === 'doctor') {
+    await Doctor.findOneAndUpdate(
+      { user_id: req.user.id },
+      {
+        photo: req.body.photo,
+        address: req.body.address,
+        about: req.body.about,
+        appointmentPrice: req.body.appointmentPrice,
+      },
+      {
+        runValidators: true,
+      }
+    );
+  }
   res.status(200).json({
     status: 'success',
     data: updatedUser,

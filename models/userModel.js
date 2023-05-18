@@ -4,85 +4,93 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Please tell your name!'],
-    trim: true,
-    minlength: 3,
-    maxlength: 20,
-  },
-  role: {
-    type: String,
-    enum: ['patient', 'doctor', 'admin'],
-    default: 'patient',
-  },
-  email: {
-    type: String,
-    unique: true,
-    required: [true, 'Please provide your email!'],
-    trim: true,
-    lowercase: true,
-    validate: [validator.isEmail, 'Please provide a valid email!'],
-  },
-  phone_number: {
-    type: String,
-    validate: {
-      validator: function (v) {
-        const regex = /^(\+20|0)?1[0125][0-9]{8}$/;
-        return regex.test(v);
-      },
-      message: 'Please provide a valid phone number!',
-    },
-    required: [true, 'Please provide a phone number!'],
-  },
-  password: {
-    type: String,
-    required: [true, 'Please provide a password!'],
-    trim: true,
-    minlength: 8,
-    maxlength: 32,
-    select: false,
-  },
-  passwordConfirm: {
-    type: String,
-    required: [true, 'Please confirm your password!'],
-    trim: true,
-    validate: {
-      // This validator only works on CREATE and SAVE queries!
-      validator: function (el) {
-        return el === this.password;
-      },
-      message: `Password and password confirmation aren't the same!`,
-    },
-  },
-  active: {
-    type: Boolean,
-    default: true,
-    select: false,
-  },
-  photo: {
-    type: String,
-    default: 'default.jpg',
-  },
-  passwordChangeAt: Date,
-  passwordResetToken: {
-    type: String,
-    select: false,
-  },
-  passwordResetTokenExpiry: {
-    Date,
-    select: false,
-  },
-  location: {
-    type: {
+const userSchema = new mongoose.Schema(
+  {
+    name: {
       type: String,
-      default: 'Point',
-      enum: ['Point'],
+      required: [true, 'Please tell your name!'],
+      trim: true,
+      minlength: 3,
+      maxlength: 20,
     },
-    coordinates: [Number],
+    role: {
+      type: String,
+      enum: ['patient', 'doctor', 'admin'],
+      default: 'patient',
+    },
+    email: {
+      type: String,
+      unique: true,
+      required: [true, 'Please provide your email!'],
+      trim: true,
+      lowercase: true,
+      validate: [validator.isEmail, 'Please provide a valid email!'],
+    },
+    phone_number: {
+      type: String,
+      validate: {
+        validator: function (v) {
+          const regex = /^(\+20|0)?1[0125][0-9]{8}$/;
+          return regex.test(v);
+        },
+        message: 'Please provide a valid phone number!',
+      },
+      required: [true, 'Please provide a phone number!'],
+    },
+    password: {
+      type: String,
+      required: [true, 'Please provide a password!'],
+      trim: true,
+      minlength: 8,
+      maxlength: 32,
+      select: false,
+    },
+    passwordConfirm: {
+      type: String,
+      required: [true, 'Please confirm your password!'],
+      trim: true,
+      validate: {
+        // This validator only works on CREATE and SAVE queries!
+        validator: function (el) {
+          return el === this.password;
+        },
+        message: `Password and password confirmation aren't the same!`,
+      },
+    },
+    active: {
+      type: Boolean,
+      default: true,
+      select: false,
+    },
+    photo: {
+      type: String,
+      default: 'default.jpg',
+    },
+    passwordChangeAt: Date,
+    passwordResetToken: {
+      type: String,
+      select: false,
+    },
+    passwordResetTokenExpiry: {
+      Date,
+      select: false,
+    },
+    location: {
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+    },
   },
-});
+  {
+    timestamps: {
+      createdAt: 'createdAt',
+      updatedAt: 'updatedAt',
+    },
+  }
+);
 
 // Encrypting User password before saving to DB
 userSchema.pre('save', async function (next) {

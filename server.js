@@ -32,11 +32,11 @@ mongoose
 
 const port = process.env.PORT || 8000;
 
+scheduleCronJob(Doctor);
+
 const server = app.listen(port, () => {
   console.log(chalk.green(`App running on port ${port}...`));
 });
-
-scheduleCronJob(Doctor);
 
 process.on('unhandledRejection', (err) => {
   console.log(chalk.red('Unhandled Rejection!'));
