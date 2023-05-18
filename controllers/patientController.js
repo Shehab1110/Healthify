@@ -15,7 +15,7 @@ const {
 } = require('./bookingController');
 
 const configuration = new Configuration({
-  organization: 'org-NKvTpaIjb2QEEcmGmqu8gh9S',
+  organization: process.env.OPENAI_ORGANIZATION,
   apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
@@ -52,11 +52,20 @@ exports.searchDoctorsBySpeciality = async (req, res, next) => {
         distance: 1,
         rate: 1,
         ratingNum: 1,
+        photo: 1,
+        address: 1,
+        about: 1,
+        appointmentPrice: 1,
       },
     },
   ]);
   if (doctors.length === 0) return next(new AppError('No Doctors Found!', 404));
-
+  const patient = await Patient.findOne({ user_id: req.user.id });
+  const { favoriteDoctors } = patient;
+  const favorites = favoriteDoctors.map((el) => el.toString());
+  doctors.forEach((doctor) => {
+    if (favorites.includes(doctor._id.toString())) doctor.favorite = true;
+  });
   res.status(200).json({
     status: 'success',
     data: doctors,
@@ -100,6 +109,10 @@ exports.searchDoctors = catchAsync(async (req, res, next) => {
         distance: 1,
         rate: 1,
         ratingNum: 1,
+        photo: 1,
+        address: 1,
+        about: 1,
+        appointmentPrice: 1,
       },
     },
   ];
@@ -112,6 +125,12 @@ exports.searchDoctors = catchAsync(async (req, res, next) => {
   }
   const doctors = await Doctor.aggregate(pipeline);
   if (doctors.length === 0) return next(new AppError('No doctors found!'), 404);
+  const patient = await Patient.findOne({ user_id: req.user.id });
+  const { favoriteDoctors } = patient;
+  const favorites = favoriteDoctors.map((el) => el.toString());
+  doctors.forEach((doctor) => {
+    if (favorites.includes(doctor._id.toString())) doctor.favorite = true;
+  });
   res.status(200).json({
     status: 'success',
     data: doctors,
@@ -159,8 +178,8 @@ exports.scheduleAppointment = catchAsync(async (req, res, next) => {
   const dateTime = new Date(dateTimeString);
   const todayTime = new Date();
   const timeDifference = dateTime.getTime() - todayTime.getTime();
-  if (timeDifference < 6 * 60 * 60 * 1000)
-    return next(new AppError('You should book at least 6 hours in advance!'));
+  if (timeDifference < 3 * 60 * 60 * 1000)
+    return next(new AppError('You should book at least 3 hours in advance!'));
   const doctor = await Doctor.findById(doctorID).select('+availableTimes');
   if (!doctor) {
     return next(new AppError('No doctor found with that ID', 404));
@@ -578,5 +597,17 @@ exports.removeFavoriteDoctor = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: patient,
+  });
+});
+
+exports.getFavoriteDoctors = catchAsync(async (req, res, next) => {
+  const { user } = req;
+  const patient = await Patient.findOne({ user_id: user.id }).populate({
+    path: 'favoriteDoctors',
+    select: 'name speciality ratingNum rate photo location',
+  });
+  res.status(200).json({
+    status: 'success',
+    data: patient.favoriteDoctors,
   });
 });

@@ -17,6 +17,10 @@ const doctorSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  photo: {
+    type: String,
+    default: 'default.jpg',
+  },
   speciality: {
     type: String,
     required: true,
@@ -27,10 +31,14 @@ const doctorSchema = new mongoose.Schema({
   about: {
     type: String,
     // required: [true, 'Please tell us about yourself!'],
+    trim: true,
+    maxlength: 250,
   },
   address: {
     type: String,
     // required: [true, 'Please tell us your address!'],
+    trim: true,
+    maxlength: 250,
   },
   location: {
     type: {
