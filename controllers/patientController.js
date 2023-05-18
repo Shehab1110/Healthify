@@ -214,7 +214,7 @@ exports.scheduleAppointment = catchAsync(async (req, res, next) => {
   } else if (paymentMethod === 'cash') {
     const appointment = await Appointment.create({
       patient_id: user.id,
-      doctor_id: doctorID,
+      doctor_id: doctor.user_id,
       date,
       time,
       paymentMethod,
