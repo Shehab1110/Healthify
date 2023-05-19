@@ -19,6 +19,7 @@ const DB = process.env.DATABASE.replace(
   '<PASSWORD>',
   process.env.DATABASE_PASSWORD
 );
+const port = process.env.PORT || 8000;
 
 mongoose.set('strictQuery', false);
 mongoose
@@ -28,15 +29,18 @@ mongoose
   })
   .then(() => {
     console.log(chalk.green('DB connection successful!'));
-  });
-
-const port = process.env.PORT || 8000;
+    const server = app.listen(port, () => {
+      console.log(chalk.green(`App running on port ${port}...`));
+      // eslint-disable-next-line global-require
+      const io = require('./socket').init(server);
+      io.on('connection', (socket) => {
+        console.log('A Client Connected!');
+      });
+    });
+  })
+  .catch((err) => console.log(chalk.red(err)));
 
 scheduleCronJob(Doctor);
-
-const server = app.listen(port, () => {
-  console.log(chalk.green(`App running on port ${port}...`));
-});
 
 process.on('unhandledRejection', (err) => {
   console.log(chalk.red('Unhandled Rejection!'));
