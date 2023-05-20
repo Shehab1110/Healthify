@@ -9,6 +9,25 @@ const EMR = require('../models/emrModel');
 
 exports.setAvailableTimes = catchAsync(async (req, res, next) => {
   const { availableTimes } = req.body;
+  if (
+    !availableTimes ||
+    !availableTimes.day ||
+    !availableTimes.startTime ||
+    !availableTimes.endTime
+  )
+    return next(
+      new AppError('Please provide available times in the correct format1', 400)
+    );
+  if (
+    !validator.isISO8601(availableTimes.day) ||
+    !validator.isAfter(availableTimes.day)
+  )
+    return next(
+      new AppError(
+        `Please provide a valid date and a date that's yet to come!`,
+        400
+      )
+    );
   availableTimes.hourRange = [];
   const doctorId = req.user.id;
   const doctor = await Doctor.findOne({ user_id: doctorId }).select(
@@ -18,7 +37,6 @@ exports.setAvailableTimes = catchAsync(async (req, res, next) => {
     availableTimes.startTime,
     availableTimes.endTime
   );
-
   if (doctor) {
     // check if an object with the same day already exists in the array
     const existingObjIndex = doctor.availableTimes.findIndex(
@@ -56,9 +74,22 @@ exports.viewMyAppointments = catchAsync(async (req, res, next) => {
 
   if (appointments.length === 0)
     return next(new AppError('No upcoming appointments yet!'), 404);
+  const todayAppointments = appointments.filter(
+    (appointment) => appointment.date.getDate() === new Date().getDate()
+  );
+  const upcomingAppointments = appointments.filter(
+    (appointment) => appointment.date.getDate() > new Date().getDate()
+  );
+  const pastAppointments = appointments.filter(
+    (appointment) => appointment.date.getDate() < new Date().getDate()
+  );
   res.status(200).json({
     status: 'success',
-    data: appointments,
+    data: {
+      todayAppointments,
+      upcomingAppointments,
+      pastAppointments,
+    },
   });
 });
 
@@ -137,8 +168,15 @@ exports.viewPatientEMR = catchAsync(async (req, res, next) => {
 exports.updatePatientEMR = async (req, res, next) => {
   const { appointmentID, diagnosis, medication, dosage, instructions, notes } =
     req.body;
+  if (!appointmentID || !validator.isMongoId(appointmentID))
+    return next(new AppError('Please provide a valid appoitnment ID!', 400));
   const appointment = await Appointment.findById(appointmentID);
   if (!appointment) return next(new AppError('Invalid Appointment ID!', 400));
+  if (
+    appointment.doctor_id.toString() !== req.user.id.toString() ||
+    appointment.status !== 'completed'
+  )
+    return next(new AppError(`You don't have permissions!`));
   if (appointment.emr === null)
     return next(
       new AppError(`EMR hasn't been created for this appointment yet!`, 400)
