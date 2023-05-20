@@ -1,3 +1,5 @@
+const validator = require('validator');
+
 const Doctor = require('../models/doctorModel');
 const Appointment = require('../models/appointmentModel');
 const catchAsync = require('../utils/catchAsync');
@@ -77,16 +79,22 @@ exports.markAppointmentAsCompletedByID = catchAsync(async (req, res, next) => {
 
 exports.createPatientEMR = catchAsync(async (req, res, next) => {
   const doctorID = req.user.id;
-  const patientID = req.body.id;
-  const appointment = await Appointment.findOne({
-    patient_id: patientID,
-    doctor_id: doctorID,
-    status: 'completed',
-  });
-  if (!appointment)
-    return next(new AppError(`You can't access this patient's EMR!`, 401));
+  const { appointmentID } = req.body;
+  if (!appointmentID || !validator.isMongoId(appointmentID))
+    return next(new AppError('Please provide a valid appoitnment ID!', 400));
+  const appointment = await Appointment.findById(appointmentID);
+  if (!appointment) return next(new AppError('Invalid appointment ID!', 400));
+  if (
+    appointment.doctor_id.toString() !== doctorID.toString() ||
+    appointment.status !== 'completed'
+  )
+    return next(new AppError(`You don't have permissions!`));
+  if (appointment.emr)
+    return next(
+      new AppError(`There's an existing emr for this appointment!`, 400)
+    );
   const emr = await EMR.create({
-    patient: patientID,
+    patient: appointment.patient_id,
     doctor: doctorID,
     appointment: appointment.id,
     diagnosis: req.body.diagnosis,
@@ -99,7 +107,7 @@ exports.createPatientEMR = catchAsync(async (req, res, next) => {
   appointment.emr = emr.id;
   await appointment.save();
   await Patient.findOneAndUpdate(
-    { user_id: patientID },
+    { user_id: appointment.patient_id },
     {
       $push: { emrs: emr.id },
     }
