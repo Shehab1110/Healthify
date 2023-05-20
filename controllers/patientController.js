@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 const { Configuration, OpenAIApi } = require('openai');
 const validator = require('validator');
 
@@ -138,14 +139,25 @@ exports.searchDoctors = catchAsync(async (req, res, next) => {
 });
 // View Doctor By his ID
 exports.viewDoctorByID = catchAsync(async (req, res, next) => {
+  let favorite;
   const doctor = await Doctor.findById(req.params.id).select('+availableTimes');
-  const ratings = await Rating.find({ doctor_id: doctor.id });
   if (!doctor) return next(new AppError('This doctor ID is invalid!'), 400);
+  const ratings = await Rating.find({ doctor_id: doctor.id }).select(
+    'rating review'
+  );
+  const patient = await Patient.findOne({ user_id: req.user.id });
+  const { favoriteDoctors } = patient;
+  const favorites = favoriteDoctors.map((el) => el.toString());
+  favorites.includes(doctor.id.toString())
+    ? (favorite = true)
+    : (favorite = false);
+
   res.status(200).json({
     status: 'success',
     data: {
       doctor,
       ratings,
+      favorite,
     },
   });
 });
@@ -258,8 +270,10 @@ exports.scheduleAppointment = catchAsync(async (req, res, next) => {
 exports.viewMyAppointments = catchAsync(async (req, res, next) => {
   const { user } = req;
   const appointments = await Appointment.find({ patient_id: user.id }).populate(
-    'doctor_id',
-    'name'
+    {
+      path: 'doctor_id',
+      select: 'name photo',
+    }
   );
 
   if (appointments.length === 0)
