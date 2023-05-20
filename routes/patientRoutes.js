@@ -12,7 +12,7 @@ router.get(
 );
 
 router.get(
-  '/searchDoctors/:name/:speciality?',
+  '/searchDoctors/:name/:coordinates/:speciality?',
   authController.protect,
   patientController.searchDoctors
 );

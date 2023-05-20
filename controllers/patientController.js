@@ -74,9 +74,8 @@ exports.searchDoctorsBySpeciality = async (req, res, next) => {
 };
 
 exports.searchDoctors = catchAsync(async (req, res, next) => {
-  const { user } = req;
-  const { name, speciality } = req.params;
-  const maxDistance = 100000;
+  const { name, speciality, coordinates } = req.params;
+  // const maxDistance = 100000;
   if (!name && !speciality)
     return next(
       new AppError('You should provide a name or a speciality!', 400)
@@ -87,19 +86,19 @@ exports.searchDoctors = catchAsync(async (req, res, next) => {
         near: {
           type: 'Point',
           coordinates: [
-            parseFloat(user.location.coordinates[0]),
-            parseFloat(user.location.coordinates[1]),
+            parseFloat(coordinates.split(','[1])),
+            parseFloat(coordinates.split(','[0])),
           ],
         },
         distanceField: 'distance',
-        maxDistance: maxDistance,
+        // maxDistance: maxDistance,
         spherical: true,
         distanceMultiplier: 0.001,
       },
     },
     {
       $match: {
-        name: { $regex: `^Dr. ${name}` },
+        name: { $regex: `^Dr. ${name}`, $options: 'i' },
       },
     },
     {
