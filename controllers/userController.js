@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 const multer = require('multer');
 const sharp = require('sharp');
 const validator = require('validator');
@@ -15,14 +16,18 @@ const multerStorage = multer.memoryStorage();
 
 // To accept only images and reject other files
 const multerFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image')) cb(null, true);
-  else cb(new AppError('Not an image! Please upload only images.', 400), false);
+  file.mimetype.startsWith('image')
+    ? cb(null, true)
+    : cb(new AppError('Not an image! Please upload only images.', 400), false);
 };
 
 // To upload the image to the memory
 exports.uploadUserPhoto = multer({
   storage: multerStorage,
   fileFilter: multerFilter,
+  limits: {
+    fileSize: 2 * 1024 * 1024, // 2MB
+  },
 }).single('photo');
 
 // To resize the image and save it to the disk
@@ -100,7 +105,9 @@ exports.cancelAppointmentByID = catchAsync(async (req, res, next) => {
   if (!appointment) return next(new AppError('Invalid appointment ID!'), 400);
   const { date, time, patient_id, doctor_id } = appointment;
   const bookingID = appointment.booking;
-  const doctor = await Doctor.findById(doctor_id).select('+availableTimes');
+  const doctor = await Doctor.findOne({ user_id: doctor_id }).select(
+    '+availableTimes'
+  );
   const existingIndex = doctor.availableTimes.findIndex(
     (o) => o.day.getTime() === date.getTime()
   );
