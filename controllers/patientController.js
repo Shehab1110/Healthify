@@ -300,7 +300,10 @@ exports.viewAppointmentEMR = catchAsync(async (req, res, next) => {
   const appointmentID = req.params.id;
   if (!validator.isMongoId(appointmentID))
     return next(new AppError('Please provide a valid appointment ID!', 400));
-  const emr = await EMR.findOne({ appointment: appointmentID });
+  const emr = await EMR.findOne({ appointment: appointmentID }).populate({
+    path: 'doctor',
+    select: 'name',
+  });
   if (!emr)
     return next(new AppError('No EMR related to this appointment!', 404));
   res.status(200).json({
