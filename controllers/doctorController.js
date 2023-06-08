@@ -74,18 +74,25 @@ exports.viewMyAppointments = catchAsync(async (req, res, next) => {
 
   if (appointments.length === 0)
     return next(new AppError('No upcoming appointments yet!'), 404);
-  const todayAppointments = appointments.filter(
+  const completedAppointments = appointments.filter(
+    (appointment) => appointment.status === 'completed'
+  );
+  const scheduledAppointments = appointments.filter(
+    (appointment) => appointment.status !== 'completed'
+  );
+  const todayAppointments = scheduledAppointments.filter(
     (appointment) => appointment.date.getDate() === new Date().getDate()
   );
-  const upcomingAppointments = appointments.filter(
+  const upcomingAppointments = scheduledAppointments.filter(
     (appointment) => appointment.date.getDate() > new Date().getDate()
   );
-  const pastAppointments = appointments.filter(
+  const pastAppointments = scheduledAppointments.filter(
     (appointment) => appointment.date.getDate() < new Date().getDate()
   );
   res.status(200).json({
     status: 'success',
     data: {
+      completedAppointments,
       todayAppointments,
       upcomingAppointments,
       pastAppointments,
