@@ -14,7 +14,6 @@ process.on('uncaughtException', (err) => {
 });
 
 const app = require('./app');
-const socket = require('./socket');
 
 const DB = process.env.DATABASE.replace(
   '<PASSWORD>',
@@ -36,8 +35,7 @@ mongoose
       // eslint-disable-next-line global-require
       const io = require('./socket').init(server);
       io.on('connection', (socket) => {
-        console.log('A Client Connected!');
-        console.log(socket);
+        console.log(`A client connected : ${socket.id}`);
       });
     });
   })

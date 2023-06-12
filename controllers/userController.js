@@ -127,7 +127,7 @@ exports.cancelAppointmentByID = catchAsync(async (req, res, next) => {
   await patient.save();
 
   await Booking.findByIdAndUpdate(bookingID, { status: 'cancelled' });
-
+  await Appointment.findByIdAndDelete(appointment.id);
   res.status(200).json({
     status: 'success',
     data: appointment,
