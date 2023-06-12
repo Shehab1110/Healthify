@@ -33,6 +33,7 @@
     "sharp": "^0.32.0",
     "slugify": "^1.6.5",
     "socket.io": "^4.6.1",
+    "socket.io-client": "^4.6.2",
     "stripe": "^12.4.0",
     "validator": "^13.9.0",
     "xss-clean": "^0.1.1"

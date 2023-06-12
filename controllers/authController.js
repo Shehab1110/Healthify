@@ -3,7 +3,7 @@
 const crypto = require('crypto');
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
-const io = require('../socket');
+const openSocket = require('socket.io-client');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/appError');
@@ -106,6 +106,7 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!user || !(await user.checkPassword(password, user.password))) {
     return next(new AppError('Incorrect email or password!', 401));
   }
+  openSocket('http://localhost:3000');
   createSendToken(user, 200, res);
 });
 
