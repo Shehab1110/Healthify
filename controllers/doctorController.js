@@ -67,10 +67,10 @@ exports.setAvailableTimes = catchAsync(async (req, res, next) => {
 
 exports.viewMyAppointments = catchAsync(async (req, res, next) => {
   const { user } = req;
-  const appointments = await Appointment.find({ doctor_id: user.id }).populate(
-    'patient_id',
-    'name'
-  );
+  const appointments = await Appointment.find({ doctor_id: user.id }).populate({
+    path: 'patient_id',
+    select: 'name photo',
+  });
 
   if (appointments.length === 0)
     return next(new AppError('No upcoming appointments yet!'), 404);
