@@ -19,7 +19,7 @@ To run this project locally, you need to have Node.js and MongoDB installed on y
 ### Installation
 
 1. Clone this repo to your local machine using `git clone https://github.com/<your-username>/healthify.git`.
-2. Go to the project directory using `cd natours`.
+2. Go to the project directory using `cd Healthify`.
 3. Install the dependencies using `npm install` or `yarn install`.
 4. Create a `.env` file in the root folder and add the following environment variables:
 
